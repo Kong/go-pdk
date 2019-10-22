@@ -59,7 +59,7 @@ func (n *Nginx) GetVar(k string) *string {
 }
 
 func (n *Nginx) GetTLS1VersionStr() *string {
-	n.ch <- `kong.nginx.get_tls1_version_str:%s`
+	n.ch <- `kong.nginx.get_tls1_version_str`
 	return readStringP(n.ch)
 }
 

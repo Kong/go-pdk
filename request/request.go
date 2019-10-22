@@ -20,32 +20,32 @@ func (r *Request) GetScheme() string {
 
 func (r *Request) GetHost() string {
 	r.ch <- `kong.request.get_host`
-	return <- r.ch
+	return <-r.ch
 }
 
 func (r *Request) GetPort() string {
 	r.ch <- `kong.request.get_port`
-	return <- r.ch
+	return <-r.ch
 }
 
 func (r *Request) GetForwardedScheme() string {
 	r.ch <- `kong.request.get_forwarded_scheme`
-	return <- r.ch
+	return <-r.ch
 }
 
 func (r *Request) GetForwardedHost() string {
 	r.ch <- `kong.request.get_forwarded_host`
-	return <- r.ch
+	return <-r.ch
 }
 
 func (r *Request) GetForwardedPort() string {
 	r.ch <- `kong.request.get_forwarded_port`
-	return <- r.ch
+	return <-r.ch
 }
 
 func (r *Request) GetHttpVersion() string {
 	r.ch <- `kong.request.get_http_version`
-	return <- r.ch
+	return <-r.ch
 }
 
 func (r *Request) GetMethod() string {
@@ -73,8 +73,14 @@ func (r *Request) GetQueryArg() string {
 	return <-r.ch
 }
 
-func (r *Request) GetQuery() map[string]interface{} {
-	r.ch <- `kong.request.get_query`
+func (r *Request) GetQuery(max_args int) map[string]interface{} {
+	var method string
+	if max_args == -1 {
+		method = "kong.request.get_query"
+	} else {
+		method = fmt.Sprintf(`kong.request.get_query:%d`, max_args)
+	}
+	r.ch <- method
 	reply := <-r.ch
 	query := make(map[string]interface{})
 	json.Unmarshal([]byte(reply), &query)
@@ -86,8 +92,14 @@ func (r *Request) GetHeader(k string) string {
 	return <-r.ch
 }
 
-func (r *Request) GetHeaders() map[string]interface{} {
-	r.ch <- `kong.request.get_headers`
+func (r *Request) GetHeaders(max_headers int) map[string]interface{} {
+	var method string
+	if max_headers == -1 {
+		method = `kong.request.get_headers`
+	} else {
+		method = fmt.Sprintf(`kong.request.get_headers:%d`, max_headers)
+	}
+	r.ch <- method
 	reply := <-r.ch
 	headers := make(map[string]interface{})
 	json.Unmarshal([]byte(reply), &headers)
@@ -99,8 +111,4 @@ func (r *Request) GetRawBody() string {
 	return <-r.ch
 }
 
-func (r *Request) GetBody() string {
-	r.ch <- `kong.request.get_raw_body`
-	return <-r.ch
-}
-
+// TODO get_body

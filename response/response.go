@@ -26,8 +26,14 @@ func (r *Response) GetHeader(name string) string {
 	return <-r.ch
 }
 
-func (r *Response) GetHeaders() map[string]interface{} {
-	r.ch <- `kong.response.get_headers`
+func (r *Response) GetHeaders(max_headers int) map[string]interface{} {
+	var method string
+	if max_headers == -1 {
+		method = `kong.response.get_headers`
+	} else {
+		method = fmt.Sprintf(`kong.response.get_headers:%d`, max_headers)
+	}
+	r.ch <- method
 	reply := <-r.ch
 	headers := make(map[string]interface{})
 	json.Unmarshal([]byte(reply), &headers)
@@ -59,6 +65,15 @@ func (r *Response) ClearHeader(k string) {
 	_ = <-r.ch
 }
 
-// TODO set_headers
+func (r *Response) SetHeaders(headers map[string]interface{}) error {
+	headersBytes, err := json.Marshal(headers)
+	if err != nil {
+		return err
+	}
+
+	r.ch <- fmt.Sprintf(`kong.response.set_headers:%s`, string(headersBytes))
+	_ = <-r.ch
+	return nil
+}
 
 // TODO exit

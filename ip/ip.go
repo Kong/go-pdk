@@ -1,6 +1,7 @@
 package ip
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -13,8 +14,8 @@ func NewIp(ch chan string) *Ip {
 }
 
 func (ip *Ip) IsTrusted(address string) *bool {
-	ip.ch <- `kong.ip.is_trusted`
-	reply := <- ip.ch
+	ip.ch <- fmt.Sprintf(`kong.ip.is_trusted:%s`, address)
+	reply := <-ip.ch
 	is_trusted, err := strconv.ParseBool(reply)
 	if err != nil {
 		return nil
