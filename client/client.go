@@ -2,13 +2,13 @@ package client
 
 import (
 	"encoding/json"
-	"github.com/kong/go-pdk/entities"
 	"fmt"
+	"github.com/kong/go-pdk/entities"
 )
 
 type AuthenticatedCredential struct {
-	Id         string
-	ConsumerId string
+	Id         string `json:"id"`
+	ConsumerId string `json:"consumer_id"`
 }
 
 type Client struct {
@@ -19,40 +19,35 @@ func NewClient(ch chan string) *Client {
 	return &Client{ch: ch}
 }
 
-func (c *Client) GetIp() *string {
+func (c *Client) GetIp() string {
 	c.ch <- `kong.client.get_ip`
-	ip := <-c.ch
-	if ip == "null" {
-		return nil
-	}
-	return &ip
+	return <-c.ch
 }
 
-func (c *Client) GetForwardedIp() *string {
+func (c *Client) GetForwardedIp() string {
 	c.ch <- `kong.client.get_forwarded_ip`
-	forwarded_ip := <-c.ch
-	if forwarded_ip == "null" {
-		return nil
-	}
-	return &forwarded_ip
+	return <-c.ch
 }
 
-func (c *Client) GetPort() *string {
+func (c *Client) GetPort() string {
 	c.ch <- `kong.client.get_port`
-	port := <-c.ch
-	if port == "null" {
-		return nil
-	}
-	return &port
+	return <-c.ch
 }
 
-func (c *Client) GetForwardedPort() *string {
+func (c *Client) GetForwardedPort() string {
 	c.ch <- `kong.client.get_forwarded_port`
-	forwarded_port := <-c.ch
-	if forwarded_port == "null" {
+	return <-c.ch
+}
+
+func (c *Client) GetCredential() *AuthenticatedCredential {
+	c.ch <- `kong.client.get_credential`
+	reply := <-c.ch
+	if reply == "null" {
 		return nil
 	}
-	return &forwarded_port
+	cred := AuthenticatedCredential{}
+	json.Unmarshal([]byte(reply), &cred)
+	return &cred
 }
 
 func (c *Client) LoadConsumer(consumer_id string, by_username bool) *entities.Consumer {
@@ -77,25 +72,24 @@ func (c *Client) GetConsumer() *entities.Consumer {
 	return &consumer
 }
 
-// TODO client.authenticate
-
-func (c *Client) GetCredential() *AuthenticatedCredential {
-	c.ch <- `kong.client.get_credential`
-	reply := <-c.ch
-	if reply == "null" {
-		return nil
+func (c *Client) Authenticate(consumer *entities.Consumer, credential *AuthenticatedCredential) error {
+	consumerBytes, err := json.Marshal(consumer)
+	if err != nil {
+		return err
 	}
-	cred := AuthenticatedCredential{}
-	json.Unmarshal([]byte(reply), &cred)
-	return &cred
+	credBytes, err := json.Marshal(credential)
+	if err != nil {
+		return err
+	}
+
+	c.ch <- fmt.Sprintf(`kong.client.authenticate:["%s","%s"]`,
+		string(consumerBytes), string(credBytes))
+	_ = <-c.ch
+
+	return nil
 }
 
-func (c *Client) GetProtocol(allow_terminated bool) *string {
-	c.ch <- fmt.Sprintf(`kong.client.get_protocol:%b`, allow_terminated)
-	reply := <-c.ch
-	if reply == "null" {
-		return nil
-	}
-
-	return &reply
+func (c *Client) GetProtocol(allow_terminated bool) string {
+	c.ch <- fmt.Sprintf(`kong.client.get_protocol:%t`, allow_terminated)
+	return <-c.ch
 }

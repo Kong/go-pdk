@@ -13,13 +13,13 @@ func NewService(ch chan string) *Service {
 }
 
 func (s *Service) SetUpstream(host string) {
-	s.ch <- fmt.Sprintf(`kong.response.set_upstream:%s`, host)
-	_ = <- s.ch
+	s.ch <- fmt.Sprintf(`kong.service.set_upstream:%s`, host)
+	_ = <-s.ch
 }
 
 func (s *Service) SetTarget(host string, port int) {
-	s.ch <- fmt.Sprintf(`kong.response.set_upstream:["%s", "%d"]`, host, port)
-	_ = <- s.ch
+	s.ch <- fmt.Sprintf(`kong.service.set_target:["%s", %d]`, host, port)
+	_ = <-s.ch
 }
 
 // TODO set_tls_cert_key
