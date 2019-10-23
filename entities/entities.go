@@ -1,15 +1,15 @@
 package entities
 
 type ServiceKey struct {
-	Id string `json:"id"`
+	ID string `json:"id"`
 }
 
 type CertificateKey struct {
-	Id string `json:"id"`
+	ID string `json:"id"`
 }
 
 type Route struct {
-	Id                      string      `json:"id"`
+	ID                      string      `json:"id"`
 	CreatedAt               int         `json:"created_at"`
 	UpdatedAt               int         `json:"updated_at"`
 	Name                    string      `json:"name"`
@@ -30,7 +30,7 @@ type Route struct {
 }
 
 type Service struct {
-	Id                string          `json:"id"`
+	ID                string          `json:"id"`
 	CreatedAt         int             `json:"created_at"`
 	UpdatedAt         int             `json:"updated_at"`
 	Name              string          `json:"name"`
@@ -47,9 +47,9 @@ type Service struct {
 }
 
 type Consumer struct {
-	Id        string    `json:"id"`
+	ID        string    `json:"id"`
 	CreatedAt int       `json:"created_at"`
 	Username  *string   `json:"username"`
-	CustomId  *string   `json:"custom_id"`
+	CustomID  *string   `json:"custom_id"`
 	Tags      *[]string `json:"tags"`
 }

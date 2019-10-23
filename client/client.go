@@ -2,12 +2,13 @@ package client
 
 import (
 	"encoding/json"
+
 	"github.com/kong/go-pdk/entities"
 )
 
 type AuthenticatedCredential struct {
-	Id         string
-	ConsumerId string
+	ID         string
+	ConsumerID string
 }
 
 type Client struct {
