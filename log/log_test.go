@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var log *Log
+var log Log
 var ch chan string
 
 func init() {

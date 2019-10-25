@@ -6,8 +6,8 @@ type PdkBridge struct {
 	ch chan string
 }
 
-func New(ch chan string) *PdkBridge {
-	return &PdkBridge{ch: ch}
+func New(ch chan string) PdkBridge {
+	return PdkBridge{ch: ch}
 }
 
 func (b PdkBridge) Ask (s string) string {

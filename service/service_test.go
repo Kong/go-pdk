@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var service *Service
+var service Service
 var ch chan string
 
 func init() {
