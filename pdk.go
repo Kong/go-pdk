@@ -30,16 +30,16 @@ type PDK struct {
 
 func Init(ch chan string) *PDK {
 	return &PDK{
-		Client:          client.NewClient(ch),
-		Log:             log.NewLog(ch),
-		Nginx:           nginx.NewNginx(ch),
-		Request:         request.NewRequest(ch),
-		Response:        response.NewResponse(ch),
-		Router:          router.NewRouter(ch),
-		Ip:              ip.NewIp(ch),
-		Node:            node.NewNode(ch),
-		Service:         service.NewService(ch),
-		ServiceRequest:  service_request.NewRequest(ch),
-		ServiceResponse: service_response.NewResponse(ch),
+		Client:          client.New(ch),
+		Log:             log.New(ch),
+		Nginx:           nginx.New(ch),
+		Request:         request.New(ch),
+		Response:        response.New(ch),
+		Router:          router.New(ch),
+		Ip:              ip.New(ch),
+		Node:            node.New(ch),
+		Service:         service.New(ch),
+		ServiceRequest:  service_request.New(ch),
+		ServiceResponse: service_response.New(ch),
 	}
 }

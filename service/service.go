@@ -2,24 +2,23 @@ package service
 
 import (
 	"fmt"
+	"github.com/kong/go-pdk/bridge"
 )
 
 type Service struct {
-	ch chan string
+	bridge.PdkBridge
 }
 
-func NewService(ch chan string) *Service {
-	return &Service{ch: ch}
+func New(ch chan string) *Service {
+	return &Service{*bridge.New(ch)}
 }
 
 func (s *Service) SetUpstream(host string) {
-	s.ch <- fmt.Sprintf(`kong.service.set_upstream:%s`, host)
-	_ = <-s.ch
+	_ = s.Ask(fmt.Sprintf(`kong.service.set_upstream:%s`, host))
 }
 
 func (s *Service) SetTarget(host string, port int) {
-	s.ch <- fmt.Sprintf(`kong.service.set_target:["%s", %d]`, host, port)
-	_ = <-s.ch
+	_ = s.Ask(fmt.Sprintf(`kong.service.set_target:["%s", %d]`, host, port))
 }
 
 // TODO set_tls_cert_key

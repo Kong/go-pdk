@@ -1,95 +1,86 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/kong/go-pdk/bridge"
 	"github.com/kong/go-pdk/entities"
 )
+
+type Client struct {
+	bridge.PdkBridge
+}
 
 type AuthenticatedCredential struct {
 	Id         string `json:"id"`
 	ConsumerId string `json:"consumer_id"`
 }
 
-type Client struct {
-	ch chan string
-}
-
-func NewClient(ch chan string) *Client {
-	return &Client{ch: ch}
+func New(ch chan string) *Client {
+	return &Client{*bridge.New(ch)}
 }
 
 func (c *Client) GetIp() string {
-	c.ch <- `kong.client.get_ip`
-	return <-c.ch
+	return c.Ask(`kong.client.get_ip`)
 }
 
 func (c *Client) GetForwardedIp() string {
-	c.ch <- `kong.client.get_forwarded_ip`
-	return <-c.ch
+	return c.Ask(`kong.client.get_forwarded_ip`)
 }
 
 func (c *Client) GetPort() string {
-	c.ch <- `kong.client.get_port`
-	return <-c.ch
+	return c.Ask(`kong.client.get_port`)
 }
 
 func (c *Client) GetForwardedPort() string {
-	c.ch <- `kong.client.get_forwarded_port`
-	return <-c.ch
+	return c.Ask(`kong.client.get_forwarded_port`)
 }
 
 func (c *Client) GetCredential() *AuthenticatedCredential {
-	c.ch <- `kong.client.get_credential`
-	reply := <-c.ch
+	reply := c.Ask(`kong.client.get_credential`)
 	if reply == "null" {
 		return nil
 	}
 	cred := AuthenticatedCredential{}
-	json.Unmarshal([]byte(reply), &cred)
+	bridge.Unmarshal(reply, &cred)
 	return &cred
 }
 
 func (c *Client) LoadConsumer(consumer_id string, by_username bool) *entities.Consumer {
-	c.ch <- `kong.client.load_consumer`
-	reply := <-c.ch
+	reply := c.Ask(`kong.client.load_consumer`)
 	if reply == "null" {
 		return nil
 	}
 	consumer := entities.Consumer{}
-	json.Unmarshal([]byte(reply), &consumer)
+	bridge.Unmarshal(reply, &consumer)
 	return &consumer
 }
 
 func (c *Client) GetConsumer() *entities.Consumer {
-	c.ch <- `kong.client.get_consumer`
-	reply := <-c.ch
+	reply := c.Ask(`kong.client.get_consumer`)
 	if reply == "null" {
 		return nil
 	}
 	consumer := entities.Consumer{}
-	json.Unmarshal([]byte(reply), &consumer)
+	bridge.Unmarshal(reply, &consumer)
 	return &consumer
 }
 
 func (c *Client) Authenticate(consumer *entities.Consumer, credential *AuthenticatedCredential) error {
-	consumerBytes, err := json.Marshal(consumer)
+	consumerBytes, err := bridge.Marshal(consumer)
 	if err != nil {
 		return err
 	}
-	credBytes, err := json.Marshal(credential)
+	credBytes, err := bridge.Marshal(credential)
 	if err != nil {
 		return err
 	}
 
-	c.ch <- fmt.Sprintf(`kong.client.authenticate:["%s","%s"]`,
-		string(consumerBytes), string(credBytes))
-	_ = <-c.ch
+	_ = c.Ask(fmt.Sprintf(`kong.client.authenticate:["%s","%s"]`,
+						  consumerBytes, credBytes))
 
 	return nil
 }
 
 func (c *Client) GetProtocol(allow_terminated bool) string {
-	c.ch <- fmt.Sprintf(`kong.client.get_protocol:%t`, allow_terminated)
-	return <-c.ch
+	return c.Ask(fmt.Sprintf(`kong.client.get_protocol:%t`, allow_terminated))
 }

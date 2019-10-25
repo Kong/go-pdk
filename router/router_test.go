@@ -11,7 +11,7 @@ var ch chan string
 
 func init() {
 	ch = make(chan string)
-	router = &Router{ch: ch}
+	router = New(ch)
 }
 
 func getName(f func()) string {

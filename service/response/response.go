@@ -1,22 +1,21 @@
 package response
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
+	"github.com/kong/go-pdk/bridge"
 )
 
 type Response struct {
-	ch chan string
+	bridge.PdkBridge
 }
 
-func NewResponse(ch chan string) *Response {
-	return &Response{ch: ch}
+func New(ch chan string) *Response {
+	return &Response{*bridge.New(ch)}
 }
 
 func (r *Response) GetStatus() int {
-	r.ch <- `kong.service.response.get_status`
-	reply := <-r.ch
+	reply := r.Ask(`kong.service.response.get_status`)
 	status, _ := strconv.Atoi(reply)
 	return status
 }
@@ -28,14 +27,12 @@ func (r *Response) GetHeaders(max_headers int) map[string]interface{} {
 	} else {
 		method = fmt.Sprintf(`kong.service.response.get_headers:%d`, max_headers)
 	}
-	r.ch <- method
-	reply := <-r.ch
+
 	headers := make(map[string]interface{})
-	json.Unmarshal([]byte(reply), &headers)
+	bridge.Unmarshal(r.Ask(method), &headers)
 	return headers
 }
 
 func (r *Response) GetHeader(name string) string {
-	r.ch <- fmt.Sprintf(`kong.service.response.get_header:%s`, name)
-	return <-r.ch
+	return r.Ask(fmt.Sprintf(`kong.service.response.get_header:%s`, name))
 }

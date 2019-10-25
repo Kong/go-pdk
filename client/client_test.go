@@ -11,7 +11,7 @@ var ch chan string
 
 func init() {
 	ch = make(chan string)
-	client = &Client{ch: ch}
+	client = New(ch)
 }
 
 func getName(f func()) string {
