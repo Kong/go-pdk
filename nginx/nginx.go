@@ -1,86 +1,76 @@
 package nginx
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
+	"github.com/kong/go-pdk/bridge"
 )
 
 type Nginx struct {
-	ch chan string
+	bridge.PdkBridge
 }
 
-func NewNginx(ch chan string) *Nginx {
-	return &Nginx{ch: ch}
+func New(ch chan string) *Nginx {
+	return &Nginx{*bridge.New(ch)}
 }
 
-func readStringP(ch chan string) *string {
-	reply := <-ch
-	if reply == "null" {
+func checkAndUnmarshall(s string, v interface{}) interface{} {
+	if s == "null" {
 		return nil
 	}
-	var s string
-	err := json.Unmarshal([]byte(reply), &s)
+	err := bridge.Unmarshal(s, &v)
 	if err != nil {
+		return nil
+	}
+	return v
+}
+
+func readStringP(reply string) *string {
+	var s string
+	if checkAndUnmarshall(reply, &s) == nil {
 		return nil
 	}
 	return &s
 }
 
-func readFloatP(ch chan string) *float64 {
-	reply := <-ch
-	if reply == "null" {
-		return nil
-	}
+func readFloatP(reply string) *float64 {
 	var f float64
-	err := json.Unmarshal([]byte(reply), &f)
-	if err != nil {
+	if checkAndUnmarshall(reply, &f) == nil {
 		return nil
 	}
 	return &f
 }
 
-func readAnyP(ch chan string) *interface{} {
-	reply := <-ch
-	if reply == "null" {
-		return nil
-	}
+func readAnyP(reply string) *interface{} {
 	var p interface{}
-	err := json.Unmarshal([]byte(reply), &p)
-	if err != nil {
+	if checkAndUnmarshall(reply, &p) == nil {
 		return nil
 	}
 	return &p
 }
 
 func (n *Nginx) GetVar(k string) *string {
-	n.ch <- fmt.Sprintf(`kong.nginx.get_var:%s`, k)
-	return readStringP(n.ch)
+	return readStringP(n.Ask(fmt.Sprintf(`kong.nginx.get_var:%s`, k)))
 }
 
 func (n *Nginx) GetTLS1VersionStr() *string {
-	n.ch <- `kong.nginx.get_tls1_version_str`
-	return readStringP(n.ch)
+	return readStringP(n.Ask(`kong.nginx.get_tls1_version_str`))
 }
 
 func (n *Nginx) GetCtxAny(k string) *interface{} {
-	n.ch <- fmt.Sprintf(`kong.nginx.get_ctx:%s`, k)
-	return readAnyP(n.ch)
+	return readAnyP(n.Ask(fmt.Sprintf(`kong.nginx.get_ctx:%s`, k)))
 }
 
 func (n *Nginx) GetCtxString(k string) *string {
-	n.ch <- fmt.Sprintf(`kong.nginx.get_ctx:%s`, k)
-	return readStringP(n.ch)
+	return readStringP(n.Ask(fmt.Sprintf(`kong.nginx.get_ctx:%s`, k)))
 }
 
 func (n *Nginx) GetCtxFloat(k string) *float64 {
-	n.ch <- fmt.Sprintf(`kong.nginx.get_ctx:%s`, k)
-	return readFloatP(n.ch)
+	return readFloatP(n.Ask(fmt.Sprintf(`kong.nginx.get_ctx:%s`, k)))
 }
 
 func (n *Nginx) ReqStartTime() float64 {
-	n.ch <- `kong.nginx.req_start_time`
-	reply := <-n.ch
+	reply := n.Ask(`kong.nginx.req_start_time`)
 	t, _ := strconv.ParseFloat(reply, 64)
 	return t
 }

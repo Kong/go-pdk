@@ -1,76 +1,64 @@
 package request
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/kong/go-pdk/bridge"
 )
 
 type Request struct {
-	ch chan string
+	bridge.PdkBridge
 }
 
-func NewRequest(ch chan string) *Request {
-	return &Request{ch: ch}
+func New(ch chan string) *Request {
+	return &Request{*bridge.New(ch)}
 }
 
 func (r *Request) GetScheme() string {
-	r.ch <- `kong.request.get_scheme`
-	return <-r.ch
+	return r.Ask(`kong.request.get_scheme`)
 }
 
 func (r *Request) GetHost() string {
-	r.ch <- `kong.request.get_host`
-	return <-r.ch
+	return r.Ask(`kong.request.get_host`)
 }
 
 func (r *Request) GetPort() string {
-	r.ch <- `kong.request.get_port`
-	return <-r.ch
+	return r.Ask(`kong.request.get_port`)
 }
 
 func (r *Request) GetForwardedScheme() string {
-	r.ch <- `kong.request.get_forwarded_scheme`
-	return <-r.ch
+	return r.Ask(`kong.request.get_forwarded_scheme`)
 }
 
 func (r *Request) GetForwardedHost() string {
-	r.ch <- `kong.request.get_forwarded_host`
-	return <-r.ch
+	return r.Ask(`kong.request.get_forwarded_host`)
 }
 
 func (r *Request) GetForwardedPort() string {
-	r.ch <- `kong.request.get_forwarded_port`
-	return <-r.ch
+	return r.Ask(`kong.request.get_forwarded_port`)
 }
 
 func (r *Request) GetHttpVersion() string {
-	r.ch <- `kong.request.get_http_version`
-	return <-r.ch
+	return r.Ask(`kong.request.get_http_version`)
 }
 
 func (r *Request) GetMethod() string {
-	r.ch <- `kong.request.get_method`
-	return <-r.ch
+	return r.Ask(`kong.request.get_method`)
 }
 
 func (r *Request) GetPath() string {
-	r.ch <- `kong.request.get_path`
-	return <-r.ch
+	return r.Ask(`kong.request.get_path`)
 }
 
 func (r *Request) GetPathWithQuery() string {
-	r.ch <- `kong.request.get_path_with_query`
-	return <-r.ch
+	return r.Ask(`kong.request.get_path_with_query`)
 }
 
 func (r *Request) GetRawQuery() string {
-	r.ch <- `kong.request.get_raw_query`
-	return <-r.ch
+	return r.Ask(`kong.request.get_raw_query`)
 }
 
 func (r *Request) GetQueryArg() string {
-	r.ch <- `kong.request.get_query_arg`
-	return <-r.ch
+	return r.Ask(`kong.request.get_query_arg`)
 }
 
 func (r *Request) GetQuery(max_args int) map[string]interface{} {
@@ -80,16 +68,14 @@ func (r *Request) GetQuery(max_args int) map[string]interface{} {
 	} else {
 		method = fmt.Sprintf(`kong.request.get_query:%d`, max_args)
 	}
-	r.ch <- method
-	reply := <-r.ch
+
 	query := make(map[string]interface{})
-	json.Unmarshal([]byte(reply), &query)
+	bridge.Unmarshal(r.Ask(method), &query)
 	return query
 }
 
 func (r *Request) GetHeader(k string) string {
-	r.ch <- fmt.Sprintf(`kong.request.get_header:%s`, k)
-	return <-r.ch
+	return r.Ask(fmt.Sprintf(`kong.request.get_header:%s`, k))
 }
 
 func (r *Request) GetHeaders(max_headers int) map[string]interface{} {
@@ -99,16 +85,14 @@ func (r *Request) GetHeaders(max_headers int) map[string]interface{} {
 	} else {
 		method = fmt.Sprintf(`kong.request.get_headers:%d`, max_headers)
 	}
-	r.ch <- method
-	reply := <-r.ch
+
 	headers := make(map[string]interface{})
-	json.Unmarshal([]byte(reply), &headers)
+	bridge.Unmarshal(r.Ask(method), &headers)
 	return headers
 }
 
 func (r *Request) GetRawBody() string {
-	r.ch <- `kong.request.get_raw_body`
-	return <-r.ch
+	return r.Ask(`kong.request.get_raw_body`)
 }
 
 // TODO get_body

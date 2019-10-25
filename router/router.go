@@ -1,36 +1,34 @@
 package router
 
 import (
-	"encoding/json"
 	"github.com/kong/go-pdk/entities"
+	"github.com/kong/go-pdk/bridge"
 )
 
 type Router struct {
-	ch chan string
+	bridge.PdkBridge
 }
 
-func NewRouter(ch chan string) *Router {
-	return &Router{ch: ch}
+func New(ch chan string) *Router {
+	return &Router{*bridge.New(ch)}
 }
 
 func (c *Router) GetRoute() *entities.Route {
-	c.ch <- `kong.router.get_route`
-	reply := <-c.ch
+	reply := c.Ask(`kong.router.get_route`)
 	if reply == "null" {
 		return nil
 	}
 	route := entities.Route{}
-	json.Unmarshal([]byte(reply), &route)
+	bridge.Unmarshal(reply, &route)
 	return &route
 }
 
 func (c *Router) GetService() *entities.Service {
-	c.ch <- `kong.router.get_service`
-	reply := <-c.ch
+	reply := c.Ask(`kong.router.get_service`)
 	if reply == "null" {
 		return nil
 	}
 	service := entities.Service{}
-	json.Unmarshal([]byte(reply), &service)
+	bridge.Unmarshal(reply, &service)
 	return &service
 }
