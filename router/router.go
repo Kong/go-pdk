@@ -9,11 +9,11 @@ type Router struct {
 	bridge.PdkBridge
 }
 
-func New(ch chan string) *Router {
-	return &Router{*bridge.New(ch)}
+func New(ch chan string) Router {
+	return Router{bridge.New(ch)}
 }
 
-func (c *Router) GetRoute() *entities.Route {
+func (c Router) GetRoute() *entities.Route {
 	reply := c.Ask(`kong.router.get_route`)
 	if reply == "null" {
 		return nil
@@ -23,7 +23,7 @@ func (c *Router) GetRoute() *entities.Route {
 	return &route
 }
 
-func (c *Router) GetService() *entities.Service {
+func (c Router) GetService() *entities.Service {
 	reply := c.Ask(`kong.router.get_service`)
 	if reply == "null" {
 		return nil

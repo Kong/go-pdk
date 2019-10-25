@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var router *Router
+var router Router
 var ch chan string
 
 func init() {

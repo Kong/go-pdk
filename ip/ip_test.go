@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var ip *Ip
+var ip Ip
 var ch chan string
 
 func init() {

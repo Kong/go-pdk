@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var client *Client
+var client Client
 var ch chan string
 
 func init() {
