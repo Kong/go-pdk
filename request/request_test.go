@@ -10,7 +10,7 @@ var ch chan string
 
 func init() {
 	ch = make(chan string)
-	request = &Request{ch: ch}
+	request = New(ch)
 }
 
 func getName(f func()) string {

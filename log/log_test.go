@@ -10,7 +10,7 @@ var ch chan string
 
 func init() {
 	ch = make(chan string)
-	log = &Log{ch: ch}
+	log = New(ch)
 }
 
 func getName(f func()) string {
