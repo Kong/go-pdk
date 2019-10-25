@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var response *Response
+var response Response
 var ch chan string
 
 func init() {

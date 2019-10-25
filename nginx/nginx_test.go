@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var nginx *Nginx
+var nginx Nginx
 var ch chan string
 
 func init() {

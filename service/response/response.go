@@ -10,17 +10,17 @@ type Response struct {
 	bridge.PdkBridge
 }
 
-func New(ch chan string) *Response {
-	return &Response{*bridge.New(ch)}
+func New(ch chan string) Response{
+	return Response{bridge.New(ch)}
 }
 
-func (r *Response) GetStatus() int {
+func (r Response) GetStatus() int {
 	reply := r.Ask(`kong.service.response.get_status`)
 	status, _ := strconv.Atoi(reply)
 	return status
 }
 
-func (r *Response) GetHeaders(max_headers int) map[string]interface{} {
+func (r Response) GetHeaders(max_headers int) map[string]interface{} {
 	var method string
 	if max_headers == -1 {
 		method = `kong.service.response.get_headers`
@@ -33,6 +33,6 @@ func (r *Response) GetHeaders(max_headers int) map[string]interface{} {
 	return headers
 }
 
-func (r *Response) GetHeader(name string) string {
+func (r Response) GetHeader(name string) string {
 	return r.Ask(fmt.Sprintf(`kong.service.response.get_header:%s`, name))
 }

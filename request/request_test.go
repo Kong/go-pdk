@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var request *Request
+var request Request
 var ch chan string
 
 func init() {

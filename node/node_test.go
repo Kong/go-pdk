@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var node *Node
+var node Node
 var ch chan string
 
 func init() {

@@ -25,15 +25,15 @@ type MemoryStats struct {
 	} `json:"workers_lua_vms"`
 }
 
-func New(ch chan string) *Node {
-	return &Node{*bridge.New(ch)}
+func New(ch chan string) Node {
+	return Node{bridge.New(ch)}
 }
 
-func (n *Node) GetId() string {
+func (n Node) GetId() string {
 	return n.Ask(`kong.node.get_id`)
 }
 
-func (n *Node) GetMemoryStats() *MemoryStats {
+func (n Node) GetMemoryStats() *MemoryStats {
 	statsO := MemoryStats{}
 	bridge.Unmarshal(n.Ask(`kong.node.get_memory_stats`), &statsO)
 	return &statsO
