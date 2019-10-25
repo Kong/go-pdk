@@ -10,7 +10,7 @@ var ch chan string
 
 func init() {
 	ch = make(chan string)
-	ip = &Ip{ch: ch}
+	ip = New(ch)
 }
 
 func getName(f func()) string {

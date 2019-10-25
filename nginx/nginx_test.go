@@ -10,7 +10,7 @@ var ch chan string
 
 func init() {
 	ch = make(chan string)
-	nginx = NewNginx(ch)
+	nginx = New(ch)
 }
 
 func getName(f func()) string {

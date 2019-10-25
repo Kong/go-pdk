@@ -1,11 +1,11 @@
 package node
 
 import (
-	"encoding/json"
+	"github.com/kong/go-pdk/bridge"
 )
 
 type Node struct {
-	ch chan string
+	bridge.PdkBridge
 }
 
 type MemoryStats struct {
@@ -25,20 +25,16 @@ type MemoryStats struct {
 	} `json:"workers_lua_vms"`
 }
 
-func NewNode(ch chan string) *Node {
-	return &Node{ch: ch}
+func New(ch chan string) *Node {
+	return &Node{*bridge.New(ch)}
 }
 
 func (n *Node) GetId() string {
-	n.ch <- `kong.node.get_id`
-	return <-n.ch
+	return n.Ask(`kong.node.get_id`)
 }
 
 func (n *Node) GetMemoryStats() *MemoryStats {
-	n.ch <- `kong.node.get_memory_stats`
-	stats := <-n.ch
-
 	statsO := MemoryStats{}
-	json.Unmarshal([]byte(stats), &statsO)
+	bridge.Unmarshal(n.Ask(`kong.node.get_memory_stats`), &statsO)
 	return &statsO
 }
