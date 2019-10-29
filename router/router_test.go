@@ -1,9 +1,10 @@
 package router
 
 import (
+	"testing"
+
 	"github.com/kong/go-pdk/entities"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var router Router
@@ -22,10 +23,10 @@ func getName(f func()) string {
 }
 
 func TestGetRoute(t *testing.T) {
-	assert.Equal(t, getName(func() { router.GetRoute() }), "kong.router.get_route")
+	assert.Equal(t, getName(func() { router.GetRoute() }), "kong.router.get_route:null")
 
 	res := make(chan *entities.Route)
-	go func(res chan *entities.Route) { res <- router.GetRoute() }(res)
+	go func(res chan *entities.Route) { r, _ := router.GetRoute(); res <- r }(res)
 	_ = <-ch
 	ch <- `
 		{
@@ -40,10 +41,10 @@ func TestGetRoute(t *testing.T) {
 }
 
 func TestGetService(t *testing.T) {
-	assert.Equal(t, getName(func() { router.GetService() }), "kong.router.get_service")
+	assert.Equal(t, getName(func() { router.GetService() }), "kong.router.get_service:null")
 
 	res := make(chan *entities.Service)
-	go func(res chan *entities.Service) { res <- router.GetService() }(res)
+	go func(res chan *entities.Service) { r, _ := router.GetService(); res <- r }(res)
 	_ = <-ch
 	ch <- `
 		{

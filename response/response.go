@@ -1,8 +1,8 @@
 package response
 
 import (
-	"fmt"
 	"strconv"
+
 	"github.com/kong/go-pdk/bridge"
 )
 
@@ -14,57 +14,64 @@ func New(ch chan string) Response {
 	return Response{bridge.New(ch)}
 }
 
-func (r Response) GetStatus() int {
-	reply := r.Ask(`kong.response.get_status`)
+func (r Response) GetStatus() (int, error) {
+	reply, err := r.Ask(`kong.response.get_status`)
+	if err != nil {
+		return 0, err
+	}
+
 	status, _ := strconv.Atoi(reply)
-	return status
+	return status, nil
 }
 
-func (r Response) GetHeader(name string) string {
-	return r.Ask(fmt.Sprintf(`kong.response.get_header:%s`, name))
+func (r Response) GetHeader(name string) (string, error) {
+	return r.Ask(`kong.response.get_header`, name)
 }
 
-func (r Response) GetHeaders(max_headers int) map[string]interface{} {
-	var method string
+func (r Response) GetHeaders(max_headers int) (map[string]interface{}, error) {
+	var res string
+	var err error
 	if max_headers == -1 {
-		method = `kong.response.get_headers`
+		res, err = r.Ask(`kong.response.get_headers`)
 	} else {
-		method = fmt.Sprintf(`kong.response.get_headers:%d`, max_headers)
+		res, err = r.Ask(`kong.response.get_headers`, max_headers)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	headers := make(map[string]interface{})
-	bridge.Unmarshal(r.Ask(method), &headers)
-	return headers
+	bridge.Unmarshal(res, &headers)
+	return headers, nil
 }
 
-func (r Response) GetSource() string {
+func (r Response) GetSource() (string, error) {
 	return r.Ask(`kong.response.get_source`)
 }
 
-func (r Response) SetStatus(status int) {
-	_ = r.Ask(fmt.Sprintf(`kong.response.set_status:%d`, status))
+func (r Response) SetStatus(status int) error {
+	_, err := r.Ask(`kong.response.set_status`, status)
+	return err
 }
 
-func (r Response) SetHeader(k string, v string) {
-	_ = r.Ask(fmt.Sprintf(`kong.response.set_header:["%s","%s"]`, k, v))
+func (r Response) SetHeader(k string, v string) error {
+	_, err := r.Ask(`kong.response.set_header`, k, v)
+	return err
 }
 
-func (r Response) AddHeader(k string, v string) {
-	_ = r.Ask(fmt.Sprintf(`kong.response.add_header:["%s","%s"]`, k, v))
+func (r Response) AddHeader(k string, v string) error {
+	_, err := r.Ask(`kong.response.add_header`, k, v)
+	return err
 }
 
-func (r Response) ClearHeader(k string) {
-	_ = r.Ask(fmt.Sprintf(`kong.response.clear_header:%s`, k))
+func (r Response) ClearHeader(k string) error {
+	_, err := r.Ask(`kong.response.clear_header`, k)
+	return err
 }
 
 func (r Response) SetHeaders(headers map[string]interface{}) error {
-	headersBytes, err := bridge.Marshal(headers)
-	if err != nil {
-		return err
-	}
-
-	_ = r.Ask(fmt.Sprintf(`kong.response.set_headers:%s`, headersBytes))
-	return nil
+	_, err := r.Ask(`kong.response.set_headers`, headers)
+	return err
 }
 
 // TODO exit

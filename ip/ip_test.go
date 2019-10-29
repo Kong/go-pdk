@@ -21,11 +21,11 @@ func getName(f func()) string {
 }
 
 func TestIsTrusted(t *testing.T) {
-	assert.Equal(t, getName(func() { ip.IsTrusted("1.1.1.1") }), "kong.ip.is_trusted:1.1.1.1")
-	assert.Equal(t, getName(func() { ip.IsTrusted("1.0.0.1") }), "kong.ip.is_trusted:1.0.0.1")
+	assert.Equal(t, `kong.ip.is_trusted:["1.1.1.1"]`, getName(func() { ip.IsTrusted("1.1.1.1") }))
+	assert.Equal(t, `kong.ip.is_trusted:["1.0.0.1"]`, getName(func() { ip.IsTrusted("1.0.0.1") }))
 
 	res := make(chan *bool)
-	go func(res chan *bool) { res <- ip.IsTrusted("1.1.1.1") }(res)
+	go func(res chan *bool) { r, _ := ip.IsTrusted("1.1.1.1"); res <- r }(res)
 	_ = <-ch
 	ch <- `true`
 	trusted := <-res

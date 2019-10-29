@@ -1,8 +1,9 @@
 package service
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var service Service
@@ -21,9 +22,9 @@ func getName(f func()) string {
 }
 
 func TestSetUpstream(t *testing.T) {
-	assert.Equal(t, getName(func() { service.SetUpstream("example.test") }), "kong.service.set_upstream:example.test")
+	assert.Equal(t, `kong.service.set_upstream:["example.test"]`, getName(func() { service.SetUpstream("example.test") }))
 }
 
 func TestSetTarget(t *testing.T) {
-	assert.Equal(t, getName(func() { service.SetTarget("example.test", 80) }), `kong.service.set_target:["example.test", 80]`)
+	assert.Equal(t, `kong.service.set_target:["example.test",80]`, getName(func() { service.SetTarget("example.test", 80) }))
 }
