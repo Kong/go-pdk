@@ -1,8 +1,8 @@
 package nginx
 
 import (
-	"fmt"
 	"strconv"
+
 	"github.com/kong/go-pdk/bridge"
 )
 
@@ -49,28 +49,51 @@ func readAnyP(reply string) *interface{} {
 	return &p
 }
 
-func (n Nginx) GetVar(k string) *string {
-	return readStringP(n.Ask(fmt.Sprintf(`kong.nginx.get_var:%s`, k)))
+func (n Nginx) GetVar(k string) (*string, error) {
+	if res, err := n.Ask(`kong.nginx.get_var`, k); err != nil {
+		return nil, err
+	} else {
+		return readStringP(res), nil
+	}
 }
 
-func (n Nginx) GetTLS1VersionStr() *string {
-	return readStringP(n.Ask(`kong.nginx.get_tls1_version_str`))
+func (n Nginx) GetTLS1VersionStr() (*string, error) {
+	if res, err := n.Ask(`kong.nginx.get_tls1_version_str`); err != nil {
+		return nil, err
+	} else {
+		return readStringP(res), nil
+	}
 }
 
-func (n Nginx) GetCtxAny(k string) *interface{} {
-	return readAnyP(n.Ask(fmt.Sprintf(`kong.nginx.get_ctx:%s`, k)))
+func (n Nginx) GetCtxAny(k string) (*interface{}, error) {
+	if res, err := n.Ask(`kong.nginx.get_ctx`, k); err != nil {
+		return nil, err
+	} else {
+		return readAnyP(res), nil
+	}
 }
 
-func (n Nginx) GetCtxString(k string) *string {
-	return readStringP(n.Ask(fmt.Sprintf(`kong.nginx.get_ctx:%s`, k)))
+func (n Nginx) GetCtxString(k string) (*string, error) {
+	if res, err := n.Ask(`kong.nginx.get_ctx`, k); err != nil {
+		return nil, err
+	} else {
+		return readStringP(res), nil
+	}
 }
 
-func (n Nginx) GetCtxFloat(k string) *float64 {
-	return readFloatP(n.Ask(fmt.Sprintf(`kong.nginx.get_ctx:%s`, k)))
+func (n Nginx) GetCtxFloat(k string) (*float64, error) {
+	if res, err := n.Ask(`kong.nginx.get_ctx`, k); err != nil {
+		return nil, err
+	} else {
+		return readFloatP(res), nil
+	}
 }
 
-func (n Nginx) ReqStartTime() float64 {
-	reply := n.Ask(`kong.nginx.req_start_time`)
-	t, _ := strconv.ParseFloat(reply, 64)
-	return t
+func (n Nginx) ReqStartTime() (float64, error) {
+	if res, err := n.Ask(`kong.nginx.req_start_time`); err != nil {
+		return 0, err
+	} else {
+		t, _ := strconv.ParseFloat(res, 64)
+		return t, nil
+	}
 }

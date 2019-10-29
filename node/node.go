@@ -29,12 +29,16 @@ func New(ch chan string) Node {
 	return Node{bridge.New(ch)}
 }
 
-func (n Node) GetId() string {
+func (n Node) GetId() (string, error) {
 	return n.Ask(`kong.node.get_id`)
 }
 
-func (n Node) GetMemoryStats() *MemoryStats {
+func (n Node) GetMemoryStats() (*MemoryStats, error) {
 	statsO := MemoryStats{}
-	bridge.Unmarshal(n.Ask(`kong.node.get_memory_stats`), &statsO)
-	return &statsO
+	res, err := n.Ask(`kong.node.get_memory_stats`)
+	if err != nil {
+		return nil, err
+	}
+	bridge.Unmarshal(res, &statsO)
+	return &statsO, nil
 }

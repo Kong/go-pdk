@@ -15,17 +15,17 @@ import (
 )
 
 type PDK struct {
-	Client          *client.Client
-	Log             *log.Log
-	Nginx           *nginx.Nginx
-	Request         *request.Request
-	Response        *response.Response
-	Router          *router.Router
-	Ip              *ip.Ip
-	Node            *node.Node
-	Service         *service.Service
-	ServiceRequest  *service_request.Request
-	ServiceResponse *service_response.Response
+	Client          client.Client
+	Log             log.Log
+	Nginx           nginx.Nginx
+	Request         request.Request
+	Response        response.Response
+	Router          router.Router
+	Ip              ip.Ip
+	Node            node.Node
+	Service         service.Service
+	ServiceRequest  service_request.Request
+	ServiceResponse service_response.Response
 }
 
 func Init(ch chan string) *PDK {

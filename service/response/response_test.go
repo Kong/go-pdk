@@ -1,8 +1,9 @@
 package response
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var response Response
@@ -29,22 +30,22 @@ func getStrValue(f func(res chan string), val string) string {
 }
 
 func TestGetStatus(t *testing.T) {
-	assert.Equal(t, getName(func() { response.GetStatus() }), "kong.service.response.get_status")
+	assert.Equal(t, "kong.service.response.get_status:null", getName(func() { response.GetStatus() }))
 
 	res := make(chan int)
-	go func(res chan int) { res <- response.GetStatus() }(res)
+	go func(res chan int) { r, _ := response.GetStatus(); res <- r }(res)
 	_ = <-ch
 	ch <- "404"
 	status := <-res
-	assert.Equal(t, status, 404)
+	assert.Equal(t, 404, status)
 }
 
 func TestGetHeader(t *testing.T) {
-	assert.Equal(t, getName(func() { response.GetHeader("foo") }), "kong.service.response.get_header:foo")
-	assert.Equal(t, getStrValue(func(res chan string) { res <- response.GetHeader("foo") }, "foo"), "foo")
+	assert.Equal(t, `kong.service.response.get_header:["foo"]`, getName(func() { response.GetHeader("foo") }))
+	assert.Equal(t, "foo", getStrValue(func(res chan string) { r, _ := response.GetHeader("foo"); res <- r }, "foo"))
 }
 
 func TestGetHeaders(t *testing.T) {
-	assert.Equal(t, getName(func() { response.GetHeaders(100) }), "kong.service.response.get_headers:100")
-	assert.Equal(t, getName(func() { response.GetHeaders(-1) }), "kong.service.response.get_headers")
+	assert.Equal(t, "kong.service.response.get_headers:[100]", getName(func() { response.GetHeaders(100) }))
+	assert.Equal(t, "kong.service.response.get_headers:null", getName(func() { response.GetHeaders(-1) }))
 }

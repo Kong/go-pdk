@@ -1,8 +1,9 @@
 package response
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var response Response
@@ -29,53 +30,53 @@ func getStrValue(f func(res chan string), val string) string {
 }
 
 func TestGetStatus(t *testing.T) {
-	assert.Equal(t, getName(func() { response.GetStatus() }), "kong.response.get_status")
+	assert.Equal(t, "kong.response.get_status:null", getName(func() { response.GetStatus() }))
 	res := make(chan int)
-	go func(res chan int) { res <- response.GetStatus() }(res)
+	go func(res chan int) { r, _ := response.GetStatus(); res <- r }(res)
 	_ = <-ch
 	ch <- "404"
 	status := <-res
-	assert.Equal(t, status, 404)
+	assert.Equal(t, 404, status)
 }
 
 func TestGetHeaders(t *testing.T) {
-	assert.Equal(t, getName(func() { response.GetHeaders(100) }), "kong.response.get_headers:100")
-	assert.Equal(t, getName(func() { response.GetHeaders(-1) }), "kong.response.get_headers")
+	assert.Equal(t, "kong.response.get_headers:[100]", getName(func() { response.GetHeaders(100) }))
+	assert.Equal(t, "kong.response.get_headers:null", getName(func() { response.GetHeaders(-1) }))
 
 	res := make(chan map[string]interface{})
-	go func(res chan map[string]interface{}) { res <- response.GetHeaders(-1) }(res)
+	go func(res chan map[string]interface{}) { r, _ := response.GetHeaders(-1); res <- r }(res)
 	_ = <-ch
 	ch <- `{"h1":"v1"}`
 	headers := <-res
-	assert.Equal(t, headers, map[string]interface{}{"h1": "v1"})
+	assert.Equal(t, map[string]interface{}{"h1": "v1"}, headers)
 }
 
 func TestGetSource(t *testing.T) {
-	assert.Equal(t, getName(func() { response.GetSource() }), "kong.response.get_source")
-	assert.Equal(t, getStrValue(func(res chan string) { res <- response.GetSource() }, "foo"), "foo")
-	assert.Equal(t, getStrValue(func(res chan string) { res <- response.GetSource() }, ""), "")
+	assert.Equal(t, "kong.response.get_source:null", getName(func() { response.GetSource() }))
+	assert.Equal(t, "foo", getStrValue(func(res chan string) { r, _ := response.GetSource(); res <- r }, "foo"))
+	assert.Equal(t, "", getStrValue(func(res chan string) { r, _ := response.GetSource(); res <- r }, ""))
 }
 
 func TestSetStatus(t *testing.T) {
-	assert.Equal(t, getName(func() { response.SetStatus(404) }), "kong.response.set_status:404")
+	assert.Equal(t, "kong.response.set_status:[404]", getName(func() { response.SetStatus(404) }))
 }
 
 func TestSetHeader(t *testing.T) {
-	assert.Equal(t, getName(func() { response.SetHeader("foo", "bar") }), `kong.response.set_header:["foo","bar"]`)
+	assert.Equal(t, `kong.response.set_header:["foo","bar"]`, getName(func() { response.SetHeader("foo", "bar") }))
 }
 
 func TestAddHeader(t *testing.T) {
-	assert.Equal(t, getName(func() { response.AddHeader("foo", "bar") }), `kong.response.add_header:["foo","bar"]`)
+	assert.Equal(t, `kong.response.add_header:["foo","bar"]`, getName(func() { response.AddHeader("foo", "bar") }))
 }
 
 func TestClearHeader(t *testing.T) {
-	assert.Equal(t, getName(func() { response.ClearHeader("foo") }), `kong.response.clear_header:foo`)
+	assert.Equal(t, `kong.response.clear_header:["foo"]`, getName(func() { response.ClearHeader("foo") }))
 }
 
 func TestSetHeaders(t *testing.T) {
-	assert.Equal(t, getName(func() {
+	assert.Equal(t, `kong.response.set_headers:[{"h1":"v1"}]`, getName(func() {
 		response.SetHeaders(map[string]interface{}{
 			"h1": "v1",
 		})
-	}), `kong.response.set_headers:{"h1":"v1"}`)
+	}))
 }
