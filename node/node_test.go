@@ -1,8 +1,9 @@
 package node
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var node Node
@@ -29,9 +30,9 @@ func getStrValue(f func(res chan string), val string) string {
 }
 
 func TestGetId(t *testing.T) {
-	assert.Equal(t, getName(func() { node.GetId() }), "kong.node.get_id")
-	assert.Equal(t, getStrValue(func(res chan string) { res <- node.GetId() }, "foo"), "foo")
-	assert.Equal(t, getStrValue(func(res chan string) { res <- node.GetId() }, ""), "")
+	assert.Equal(t, getName(func() { node.GetId() }), "kong.node.get_id:null")
+	assert.Equal(t, getStrValue(func(res chan string) { r, _ := node.GetId(); res <- r }, "foo"), "foo")
+	assert.Equal(t, getStrValue(func(res chan string) { r, _ := node.GetId(); res <- r }, ""), "")
 }
 
 func TestGetMemoryStats(t *testing.T) {
@@ -59,19 +60,19 @@ func TestGetMemoryStats(t *testing.T) {
 		]
 	}`
 
-	assert.Equal(t, getName(func() { node.GetMemoryStats() }), "kong.node.get_memory_stats")
+	assert.Equal(t, "kong.node.get_memory_stats:null", getName(func() { node.GetMemoryStats() }))
 	res := make(chan *MemoryStats)
-	go func(res chan *MemoryStats) { res <- node.GetMemoryStats() }(res)
+	go func(res chan *MemoryStats) { r, _ := node.GetMemoryStats(); res <- r }(res)
 	_ = <-ch
 	ch <- stats
 	statsO := <-res
 
-	assert.Equal(t, statsO.LuaSharedDicts.Kong.AllocatedSlabs, 12288)
-	assert.Equal(t, statsO.LuaSharedDicts.Kong.Capacity, 24576)
-	assert.Equal(t, statsO.LuaSharedDicts.KongDbCache.AllocatedSlabs, 12288)
-	assert.Equal(t, statsO.LuaSharedDicts.KongDbCache.Capacity, 12288)
-	assert.Equal(t, statsO.WorkersLuaVms[0].HttpAllocatedGc, 1102)
-	assert.Equal(t, statsO.WorkersLuaVms[0].Pid, 18004)
-	assert.Equal(t, statsO.WorkersLuaVms[1].HttpAllocatedGc, 1102)
-	assert.Equal(t, statsO.WorkersLuaVms[1].Pid, 18005)
+	assert.Equal(t, 12288, statsO.LuaSharedDicts.Kong.AllocatedSlabs)
+	assert.Equal(t, 24576, statsO.LuaSharedDicts.Kong.Capacity)
+	assert.Equal(t, 12288, statsO.LuaSharedDicts.KongDbCache.AllocatedSlabs)
+	assert.Equal(t, 12288, statsO.LuaSharedDicts.KongDbCache.Capacity)
+	assert.Equal(t, 1102, statsO.WorkersLuaVms[0].HttpAllocatedGc)
+	assert.Equal(t, 18004, statsO.WorkersLuaVms[0].Pid)
+	assert.Equal(t, 1102, statsO.WorkersLuaVms[1].HttpAllocatedGc)
+	assert.Equal(t, 18005, statsO.WorkersLuaVms[1].Pid)
 }
