@@ -27,6 +27,7 @@ type PDK struct {
 	Service         service.Service
 	ServiceRequest  service_request.Request
 	ServiceResponse service_response.Response
+	Thread          thread.Thread
 }
 
 func Init(ch chan string) *PDK {
@@ -42,6 +43,6 @@ func Init(ch chan string) *PDK {
 		Service:         service.New(ch),
 		ServiceRequest:  service_request.New(ch),
 		ServiceResponse: service_response.New(ch),
-		Thread:          thread.New(ch)
+		Thread:          thread.New(ch),
 	}
 }

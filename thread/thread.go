@@ -66,7 +66,7 @@ func (t Thread) sendSignal() error {
 		return errors.New("no signal connection")
 	}
 
-	t.signalConn.Write(`.`)
+	t.signalConn.Write([]byte(`.`))
 	return nil
 }
 
@@ -87,7 +87,7 @@ func (t Thread) Spawn(f func()) (string, error) {
 
 	t.establishSignalSocket()
 
-	_ <- doneChn
+	_ = <- doneChn
 	t.sendSignal()
 	return t.ReturnReply()
 }

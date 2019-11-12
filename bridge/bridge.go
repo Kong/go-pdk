@@ -13,7 +13,7 @@ func New(ch chan string) PdkBridge {
 	return PdkBridge{ch: ch}
 }
 
-func (b PdkBridge) SendCall(method string, args []interface{}) error {
+func (b PdkBridge) SendCall(method string, args ...interface{}) error {
 	argsJson, err := json.Marshal(args)
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func (b PdkBridge) ReturnReply() (string, error) {
 }
 
 func (b PdkBridge) Ask(method string, args ...interface{}) (string, error) {
-	if err := b.SendCall(method, args); err != nil {
+	if err := b.SendCall(method, args...); err != nil {
 		return "", err
 	}
 
