@@ -9,6 +9,11 @@ type PdkBridge struct {
 	ch chan string
 }
 
+type Response struct {
+	Res string
+	Err string
+}
+
 func New(ch chan string) PdkBridge {
 	return PdkBridge{ch: ch}
 }
@@ -19,10 +24,18 @@ func (b PdkBridge) Ask(method string, args ...interface{}) (string, error) {
 	} else {
 		call := method + ":" + string(argsJson)
 		b.ch <- call
-		if reply := <-b.ch; reply == "null" {
-			return "", errors.New("null response")
+		reply := <-b.ch
+		res := Response{}
+
+		if err := json.Unmarshal([]byte(reply), &res); err != nil {
+			return "", err
+		}
+		if res.Res != "" {
+			return res.Res, nil
+		} else if res.Err != "" {
+			return "", errors.New(res.Err)
 		} else {
-			return reply, nil
+			return "", nil
 		}
 	}
 }
