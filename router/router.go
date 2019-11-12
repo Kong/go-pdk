@@ -9,26 +9,32 @@ type Router struct {
 	bridge.PdkBridge
 }
 
-func New(ch chan string) Router {
+func New(ch chan interface{}) Router {
 	return Router{bridge.New(ch)}
 }
 
-func (c Router) GetRoute() (*entities.Route, error) {
+func (c Router) GetRoute() (route entities.Route, err error) {
 	reply, err := c.Ask(`kong.router.get_route`)
-	if reply == "null" {
-		return nil, err
+	if err != nil {
+		return
 	}
-	route := entities.Route{}
-	bridge.Unmarshal(reply, &route)
-	return &route, nil
+
+	var ok bool
+	if route, ok = reply.(entities.Route); !ok {
+		err = bridge.ReturnTypeError("entities.Route")
+	}
+	return
 }
 
-func (c Router) GetService() (*entities.Service, error) {
-	reply, err := c.Ask(`kong.router.get_service`)
+func (c Router) GetService() (service entities.Service, err error) {
+	val, err := c.Ask(`kong.router.get_service`)
 	if err != nil {
-		return nil, err
+		return
 	}
-	service := entities.Service{}
-	bridge.Unmarshal(reply, &service)
-	return &service, nil
+
+	var ok bool
+	if service, ok = val.(entities.Service); !ok {
+		err = bridge.ReturnTypeError("entities.Service")
+	}
+	return
 }
