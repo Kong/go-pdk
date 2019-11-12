@@ -12,6 +12,7 @@ import (
 	"github.com/kong/go-pdk/service"
 	service_request "github.com/kong/go-pdk/service/request"
 	service_response "github.com/kong/go-pdk/service/response"
+	"github.com/kong/go-pdk/thread"
 )
 
 type PDK struct {
@@ -41,5 +42,6 @@ func Init(ch chan string) *PDK {
 		Service:         service.New(ch),
 		ServiceRequest:  service_request.New(ch),
 		ServiceResponse: service_response.New(ch),
+		Thread:          thread.New(ch)
 	}
 }
