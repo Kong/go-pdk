@@ -5,21 +5,32 @@ import (
 
 	"github.com/Kong/go-pdk/entities"
 	"github.com/stretchr/testify/assert"
+	"bridge"
 )
 
 var client Client
-var ch chan string
+var ch chan interface {}
 
 func init() {
-	ch = make(chan string)
+	ch = make(chan interface {})
 	client = New(ch)
+}
+
+func getBack(f func()) interface{} {
+	go f()
+	d := <-ch
+	ch <- nil
+
+	return d
 }
 
 func getName(f func()) string {
 	go f()
 	name := <-ch
 	ch <- ""
-	return name
+
+	s, _ := name.(string)
+	return s
 }
 
 func getStrValue(f func(res chan string), val string) string {
@@ -31,7 +42,7 @@ func getStrValue(f func(res chan string), val string) string {
 }
 
 func TestGetIp(t *testing.T) {
-	assert.Equal(t, "kong.client.get_ip:null", getName(func() { client.GetIp() }))
+	assert.Equal(t, bridge.stepData{Method:"kong.client.get_ip"}, getBack(func() { client.GetIp() }))
 	assert.Equal(t, "foo", getStrValue(func(res chan string) { r, _ := client.GetIp(); res <- r }, "foo"))
 	assert.Equal(t, "", getStrValue(func(res chan string) { r, _ := client.GetIp(); res <- r }, ""))
 }
@@ -57,8 +68,8 @@ func TestGetForwardedPort(t *testing.T) {
 func TestGetCredential(t *testing.T) {
 	assert.Equal(t, "kong.client.get_credential:null", getName(func() { client.GetCredential() }))
 
-	res := make(chan *AuthenticatedCredential)
-	go func(res chan *AuthenticatedCredential) { r, _ := client.GetCredential(); res <- r }(res)
+	res := make(chan AuthenticatedCredential)
+	go func(res chan AuthenticatedCredential) { r, _ := client.GetCredential(); res <- r }(res)
 	_ = <-ch
 	ch <- `{"id": "123", "consumer_id": "321"}`
 	cred := <-res
@@ -69,8 +80,8 @@ func TestGetCredential(t *testing.T) {
 func TestLoadConsumer(t *testing.T) {
 	assert.Equal(t, "kong.client.get_credential:null", getName(func() { client.GetCredential() }))
 
-	res := make(chan *entities.Consumer)
-	go func(res chan *entities.Consumer) { r, _ := client.LoadConsumer("foo", true); res <- r }(res)
+	res := make(chan entities.Consumer)
+	go func(res chan entities.Consumer) { r, _ := client.LoadConsumer("foo", true); res <- r }(res)
 	_ = <-ch
 	ch <- `
 		{
@@ -89,8 +100,8 @@ func TestLoadConsumer(t *testing.T) {
 func TestGetConsumer(t *testing.T) {
 	assert.Equal(t, getName(func() { client.GetConsumer() }), "kong.client.get_consumer:null")
 
-	res := make(chan *entities.Consumer)
-	go func(res chan *entities.Consumer) { r, _ := client.GetConsumer(); res <- r }(res)
+	res := make(chan entities.Consumer)
+	go func(res chan entities.Consumer) { r, _ := client.GetConsumer(); res <- r }(res)
 	_ = <-ch
 	ch <- `
 		{

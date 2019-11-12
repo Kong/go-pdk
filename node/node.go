@@ -25,20 +25,23 @@ type MemoryStats struct {
 	} `json:"workers_lua_vms"`
 }
 
-func New(ch chan string) Node {
+func New(ch chan interface{}) Node {
 	return Node{bridge.New(ch)}
 }
 
 func (n Node) GetId() (string, error) {
-	return n.Ask(`kong.node.get_id`)
+	return n.AskString(`kong.node.get_id`)
 }
 
-func (n Node) GetMemoryStats() (*MemoryStats, error) {
-	statsO := MemoryStats{}
-	res, err := n.Ask(`kong.node.get_memory_stats`)
+func (n Node) GetMemoryStats() (ms MemoryStats, err error) {
+	val, err := n.Ask(`kong.node.get_memory_stats`)
 	if err != nil {
-		return nil, err
+		return
 	}
-	bridge.Unmarshal(res, &statsO)
-	return &statsO, nil
+
+	var ok bool
+	if ms, ok = val.(MemoryStats); !ok {
+		err = bridge.ReturnTypeError("MemoryStats")
+	}
+	return
 }

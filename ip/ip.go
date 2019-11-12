@@ -2,26 +2,26 @@ package ip
 
 import (
 	"github.com/Kong/go-pdk/bridge"
-	"strconv"
+// 	"strconv"
 )
 
 type Ip struct {
 	bridge.PdkBridge
 }
 
-func New(ch chan string) Ip {
+func New(ch chan interface{}) Ip {
 	return Ip{bridge.New(ch)}
 }
 
-func (ip Ip) IsTrusted(address string) (*bool, error) {
+func (ip Ip) IsTrusted(address string) (is_trusted bool, err error) {
 	reply, err := ip.Ask(`kong.ip.is_trusted`, address)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	is_trusted, err := strconv.ParseBool(reply)
-	if err != nil {
-		return nil, err
+	var ok bool
+	if is_trusted, ok = reply.(bool); !ok {
+		err = bridge.ReturnTypeError("boolean")
 	}
-	return &is_trusted, nil
+	return
 }

@@ -28,7 +28,7 @@ type PDK struct {
 	ServiceResponse service_response.Response
 }
 
-func Init(ch chan string) *PDK {
+func Init(ch chan interface{}) *PDK {
 	return &PDK{
 		Client:          client.New(ch),
 		Log:             log.New(ch),

@@ -8,7 +8,7 @@ type Log struct {
 	bridge.PdkBridge
 }
 
-func New(ch chan string) Log {
+func New(ch chan interface{}) Log {
 	return Log{bridge.New(ch)}
 }
 
@@ -47,6 +47,6 @@ func (r Log) Debug(args ...interface{}) error {
 	return err
 }
 
-func (r Log) Serialize() (string, error) {
-	return r.Ask(`kong.log.serialize`)
+func (r Log) Serialize() (s string, err error) {
+	return r.AskString(`kong.log.serialize`)
 }

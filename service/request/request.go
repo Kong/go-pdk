@@ -8,7 +8,7 @@ type Request struct {
 	bridge.PdkBridge
 }
 
-func New(ch chan string) Request {
+func New(ch chan interface{}) Request {
 	return Request{bridge.New(ch)}
 }
 
