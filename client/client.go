@@ -45,7 +45,7 @@ func (c Client) GetCredential() (*AuthenticatedCredential, error) {
 }
 
 func (c Client) LoadConsumer(consumer_id string, by_username bool) (*entities.Consumer, error) {
-	if reply, err := c.Ask(`kong.client.load_consumer`); err != nil {
+	if reply, err := c.Ask(`kong.client.load_consumer`, consumer_id, by_username); err != nil {
 		return nil, err
 	} else {
 		consumer := entities.Consumer{}
