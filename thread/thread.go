@@ -17,7 +17,7 @@ func New(ch chan string) Thread {
 	return Thread{bridge.New(ch), nil, nil}
 }
 
-func (t Thread) makeSignalSocket() (string, error) {
+func (t *Thread) makeSignalSocket() (string, error) {
 	if t.signalSocket != nil {
 		return "", errors.New("already detached")
 	}
@@ -27,15 +27,17 @@ func (t Thread) makeSignalSocket() (string, error) {
 		return "", err
 	}
 
-	t.signalSocket, err = net.ListenUnix("unix", uaddr)
+	ul, err := net.ListenUnix("unix", uaddr)
 	if err != nil {
 		return "", err
 	}
+	ul.SetUnlinkOnClose(true)
+	t.signalSocket = ul
 
 	return "./signalSocket", nil
 }
 
-func (t Thread) closeSignalSocket() {
+func (t *Thread) closeSignalSocket() {
 	if t.signalConn != nil {
 		t.signalConn.Close()
 		t.signalConn = nil
@@ -47,7 +49,7 @@ func (t Thread) closeSignalSocket() {
 	}
 }
 
-func (t Thread) establishSignalSocket() error {
+func (t *Thread) establishSignalSocket() error {
 	if t.signalSocket == nil {
 		return errors.New("not detaching")
 	}
@@ -78,6 +80,9 @@ func (t Thread) Spawn(f func()) (string, error) {
 	defer t.closeSignalSocket()
 
 	err = t.SendCall(`kong.thread.yield`, signalSocket)
+	if err != nil {
+		return "", err
+	}
 
 	doneChn := make(chan bool)
 	go func() {
@@ -85,9 +90,15 @@ func (t Thread) Spawn(f func()) (string, error) {
 		doneChn <- true
 	}()
 
-	t.establishSignalSocket()
+	err = t.establishSignalSocket()
+	if err != nil {
+		return "", err
+	}
 
 	_ = <- doneChn
-	t.sendSignal()
+	err = t.sendSignal()
+	if err != nil {
+		return "", err
+	}
 	return t.ReturnReply()
 }
