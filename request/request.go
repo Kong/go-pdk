@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/bridge"
 )
 
 type Request struct {

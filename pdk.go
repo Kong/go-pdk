@@ -1,17 +1,17 @@
 package pdk
 
 import (
-	"github.com/kong/go-pdk/client"
-	"github.com/kong/go-pdk/ip"
-	"github.com/kong/go-pdk/log"
-	"github.com/kong/go-pdk/nginx"
-	"github.com/kong/go-pdk/node"
-	"github.com/kong/go-pdk/request"
-	"github.com/kong/go-pdk/response"
-	"github.com/kong/go-pdk/router"
-	"github.com/kong/go-pdk/service"
-	service_request "github.com/kong/go-pdk/service/request"
-	service_response "github.com/kong/go-pdk/service/response"
+	"github.com/Kong/go-pdk/client"
+	"github.com/Kong/go-pdk/ip"
+	"github.com/Kong/go-pdk/log"
+	"github.com/Kong/go-pdk/nginx"
+	"github.com/Kong/go-pdk/node"
+	"github.com/Kong/go-pdk/request"
+	"github.com/Kong/go-pdk/response"
+	"github.com/Kong/go-pdk/router"
+	"github.com/Kong/go-pdk/service"
+	service_request "github.com/Kong/go-pdk/service/request"
+	service_response "github.com/Kong/go-pdk/service/response"
 )
 
 type PDK struct {

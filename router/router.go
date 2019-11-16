@@ -1,8 +1,8 @@
 package router
 
 import (
-	"github.com/kong/go-pdk/bridge"
-	"github.com/kong/go-pdk/entities"
+	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/entities"
 )
 
 type Router struct {
