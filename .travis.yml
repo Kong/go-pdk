@@ -1,0 +1,16 @@
+dist: xenial
+
+language: go
+
+go:
+  - 1.13.x
+
+git:
+  depth: 1
+
+before_script:
+  - go get -v -u golang.org/x/lint/golint
+
+script:
+  - golint
+  - go test -v -race ./...
