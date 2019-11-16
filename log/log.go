@@ -1,7 +1,7 @@
 package log
 
 import (
-	"github.com/kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/bridge"
 )
 
 type Log struct {

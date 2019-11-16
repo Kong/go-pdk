@@ -3,7 +3,7 @@ package router
 import (
 	"testing"
 
-	"github.com/kong/go-pdk/entities"
+	"github.com/Kong/go-pdk/entities"
 	"github.com/stretchr/testify/assert"
 )
 
