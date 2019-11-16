@@ -3,7 +3,7 @@ package nginx
 import (
 	"strconv"
 
-	"github.com/kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/bridge"
 )
 
 type Nginx struct {
