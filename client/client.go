@@ -13,7 +13,7 @@ type Client struct {
 
 type AuthenticatedCredential struct {
 	ID         string `json:"id"`
-	ConsumerID string  `json:"consumer_id"`
+	ConsumerID string `json:"consumer_id"`
 }
 
 func New(ch chan string) Client {
