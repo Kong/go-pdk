@@ -1,24 +1,52 @@
 package log
 
 import (
-	"fmt"
-	"strings"
+	"github.com/Kong/go-pdk/bridge"
 )
 
 type Log struct {
-	ch chan string
+	bridge.PdkBridge
 }
 
-func NewLog(ch chan string) *Log {
-	return &Log{ch: ch}
+func New(ch chan string) Log {
+	return Log{bridge.New(ch)}
 }
 
-func (r *Log) Err(args ...string) {
-	r.ch <- fmt.Sprintf(`kong.log.err:%s`, strings.Join(args, ""))
-	_ = <-r.ch
+func (r Log) Alert(args ...interface{}) error {
+	_, err := r.Ask(`kong.log.alert`, args...)
+	return err
 }
 
-func (r *Log) Serialize() string {
-	r.ch <- fmt.Sprintf(`kong.log.serialize`)
-	return <-r.ch
+func (r Log) Crit(args ...interface{}) error {
+	_, err := r.Ask(`kong.log.crit`, args...)
+	return err
+}
+
+func (r Log) Err(args ...interface{}) error {
+	_, err := r.Ask(`kong.log.err`, args...)
+	return err
+}
+
+func (r Log) Warn(args ...interface{}) error {
+	_, err := r.Ask(`kong.log.warn`, args...)
+	return err
+}
+
+func (r Log) Notice(args ...interface{}) error {
+	_, err := r.Ask(`kong.log.notice`, args...)
+	return err
+}
+
+func (r Log) Info(args ...interface{}) error {
+	_, err := r.Ask(`kong.log.info`, args...)
+	return err
+}
+
+func (r Log) Debug(args ...interface{}) error {
+	_, err := r.Ask(`kong.log.debug`, args...)
+	return err
+}
+
+func (r Log) Serialize() (string, error) {
+	return r.Ask(`kong.log.serialize`)
 }
