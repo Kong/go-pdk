@@ -1,33 +1,28 @@
 package ip
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+	"github.com/stretchr/testify/assert"
+	"github.com/Kong/go-pdk/bridge"
 )
 
 var ip Ip
-var ch chan string
+var ch chan interface{}
 
 func init() {
-	ch = make(chan string)
+	ch = make(chan interface{})
 	ip = New(ch)
 }
 
-func getName(f func()) string {
+func getBack(f func()) interface{} {
 	go f()
-	name := <-ch
-	ch <- ""
-	return name
+	d := <-ch
+	ch <- nil
+
+	return d
 }
 
 func TestIsTrusted(t *testing.T) {
-	assert.Equal(t, `kong.ip.is_trusted:["1.1.1.1"]`, getName(func() { ip.IsTrusted("1.1.1.1") }))
-	assert.Equal(t, `kong.ip.is_trusted:["1.0.0.1"]`, getName(func() { ip.IsTrusted("1.0.0.1") }))
-
-	res := make(chan *bool)
-	go func(res chan *bool) { r, _ := ip.IsTrusted("1.1.1.1"); res <- r }(res)
-	_ = <-ch
-	ch <- `true`
-	trusted := <-res
-	assert.Equal(t, *trusted, true)
+	assert.Equal(t, bridge.StepData{Method:"kong.ip.is_trusted", Args:[]interface{}{"1.1.1.1"}}, getBack(func() { ip.IsTrusted("1.1.1.1") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.ip.is_trusted", Args:[]interface{}{"1.0.0.1"}}, getBack(func() { ip.IsTrusted("1.0.0.1") }))
 }

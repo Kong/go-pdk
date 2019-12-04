@@ -2,81 +2,55 @@ package response
 
 import (
 	"testing"
-
+	"github.com/Kong/go-pdk/bridge"
 	"github.com/stretchr/testify/assert"
 )
 
 var response Response
-var ch chan string
+var ch chan interface{}
 
 func init() {
-	ch = make(chan string)
+	ch = make(chan interface{})
 	response = New(ch)
 }
 
-func getName(f func()) string {
+func getBack(f func()) interface{} {
 	go f()
-	name := <-ch
-	ch <- ""
-	return name
-}
+	d := <-ch
+	ch <- nil
 
-func getStrValue(f func(res chan string), val string) string {
-	res := make(chan string)
-	go f(res)
-	_ = <-ch
-	ch <- val
-	return <-res
+	return d
 }
 
 func TestGetStatus(t *testing.T) {
-	assert.Equal(t, "kong.response.get_status:null", getName(func() { response.GetStatus() }))
-	res := make(chan int)
-	go func(res chan int) { r, _ := response.GetStatus(); res <- r }(res)
-	_ = <-ch
-	ch <- "404"
-	status := <-res
-	assert.Equal(t, 404, status)
+	assert.Equal(t, bridge.StepData{Method:"kong.response.get_status"}, getBack(func() { response.GetStatus() }))
 }
 
 func TestGetHeaders(t *testing.T) {
-	assert.Equal(t, "kong.response.get_headers:[100]", getName(func() { response.GetHeaders(100) }))
-	assert.Equal(t, "kong.response.get_headers:null", getName(func() { response.GetHeaders(-1) }))
-
-	res := make(chan map[string]interface{})
-	go func(res chan map[string]interface{}) { r, _ := response.GetHeaders(-1); res <- r }(res)
-	_ = <-ch
-	ch <- `{"h1":"v1"}`
-	headers := <-res
-	assert.Equal(t, map[string]interface{}{"h1": "v1"}, headers)
+	assert.Equal(t, bridge.StepData{Method:"kong.response.get_headers", Args:[]interface{}{1}}, getBack(func() { response.GetHeaders(1) }))
 }
 
 func TestGetSource(t *testing.T) {
-	assert.Equal(t, "kong.response.get_source:null", getName(func() { response.GetSource() }))
-	assert.Equal(t, "foo", getStrValue(func(res chan string) { r, _ := response.GetSource(); res <- r }, "foo"))
-	assert.Equal(t, "", getStrValue(func(res chan string) { r, _ := response.GetSource(); res <- r }, ""))
+	assert.Equal(t, bridge.StepData{Method:"kong.response.get_source"}, getBack(func() { response.GetSource() }))
 }
 
 func TestSetStatus(t *testing.T) {
-	assert.Equal(t, "kong.response.set_status:[404]", getName(func() { response.SetStatus(404) }))
+	assert.Equal(t, bridge.StepData{Method:"kong.response.get_status"}, getBack(func() { response.GetStatus() }))
 }
 
 func TestSetHeader(t *testing.T) {
-	assert.Equal(t, `kong.response.set_header:["foo","bar"]`, getName(func() { response.SetHeader("foo", "bar") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.response.set_header", Args:[]interface{}{"foo", "bar"}}, getBack(func() { response.SetHeader("foo", "bar") }))
 }
 
 func TestAddHeader(t *testing.T) {
-	assert.Equal(t, `kong.response.add_header:["foo","bar"]`, getName(func() { response.AddHeader("foo", "bar") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.response.add_header", Args:[]interface{}{"foo", "bar"}}, getBack(func() { response.AddHeader("foo", "bar") }))
 }
 
 func TestClearHeader(t *testing.T) {
-	assert.Equal(t, `kong.response.clear_header:["foo"]`, getName(func() { response.ClearHeader("foo") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.response.clear_header", Args:[]interface{}{"foo"}}, getBack(func() { response.ClearHeader("foo") }))
 }
 
 func TestSetHeaders(t *testing.T) {
-	assert.Equal(t, `kong.response.set_headers:[{"h1":"v1"}]`, getName(func() {
-		response.SetHeaders(map[string]interface{}{
-			"h1": "v1",
-		})
-	}))
+	var m map[string]interface{} = nil
+	assert.Equal(t, bridge.StepData{Method:"kong.response.set_headers", Args:[]interface{}{m}}, getBack(func() { response.SetHeaders(nil) }))
 }

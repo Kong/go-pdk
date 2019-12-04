@@ -2,29 +2,30 @@ package service
 
 import (
 	"testing"
-
+	"github.com/Kong/go-pdk/bridge"
 	"github.com/stretchr/testify/assert"
 )
 
 var service Service
-var ch chan string
+var ch chan interface{}
 
 func init() {
-	ch = make(chan string)
+	ch = make(chan interface{})
 	service = New(ch)
 }
 
-func getName(f func()) string {
+func getBack(f func()) interface{} {
 	go f()
-	name := <-ch
-	ch <- ""
-	return name
+	d := <-ch
+	ch <- nil
+
+	return d
 }
 
 func TestSetUpstream(t *testing.T) {
-	assert.Equal(t, `kong.service.set_upstream:["example.test"]`, getName(func() { service.SetUpstream("example.test") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.set_upstream", Args:[]interface{}{"foo"}}, getBack(func() { service.SetUpstream("foo") }))
 }
 
 func TestSetTarget(t *testing.T) {
-	assert.Equal(t, `kong.service.set_target:["example.test",80]`, getName(func() { service.SetTarget("example.test", 80) }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.set_target", Args:[]interface{}{"foo", 1}}, getBack(func() { service.SetTarget("foo", 1) }))
 }

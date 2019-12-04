@@ -2,50 +2,34 @@ package response
 
 import (
 	"testing"
-
+	"github.com/Kong/go-pdk/bridge"
 	"github.com/stretchr/testify/assert"
 )
 
 var response Response
-var ch chan string
+var ch chan interface{}
 
 func init() {
-	ch = make(chan string)
+	ch = make(chan interface{})
 	response = New(ch)
 }
 
-func getName(f func()) string {
+func getBack(f func()) interface{} {
 	go f()
-	name := <-ch
-	ch <- ""
-	return name
-}
+	d := <-ch
+	ch <- nil
 
-func getStrValue(f func(res chan string), val string) string {
-	res := make(chan string)
-	go f(res)
-	_ = <-ch
-	ch <- val
-	return <-res
+	return d
 }
 
 func TestGetStatus(t *testing.T) {
-	assert.Equal(t, "kong.service.response.get_status:null", getName(func() { response.GetStatus() }))
-
-	res := make(chan int)
-	go func(res chan int) { r, _ := response.GetStatus(); res <- r }(res)
-	_ = <-ch
-	ch <- "404"
-	status := <-res
-	assert.Equal(t, 404, status)
+	assert.Equal(t, bridge.StepData{Method:"kong.service.response.get_status"}, getBack(func() { response.GetStatus() }))
 }
 
 func TestGetHeader(t *testing.T) {
-	assert.Equal(t, `kong.service.response.get_header:["foo"]`, getName(func() { response.GetHeader("foo") }))
-	assert.Equal(t, "foo", getStrValue(func(res chan string) { r, _ := response.GetHeader("foo"); res <- r }, "foo"))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.response.get_header", Args:[]interface{}{"foo"}}, getBack(func() { response.GetHeader("foo") }))
 }
 
 func TestGetHeaders(t *testing.T) {
-	assert.Equal(t, "kong.service.response.get_headers:[100]", getName(func() { response.GetHeaders(100) }))
-	assert.Equal(t, "kong.service.response.get_headers:null", getName(func() { response.GetHeaders(-1) }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.response.get_headers", Args:[]interface{}{1}}, getBack(func() { response.GetHeaders(1) }))
 }
