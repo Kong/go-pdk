@@ -3,6 +3,7 @@ package client
 import (
 	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/entities"
+	"fmt"
 )
 
 type Client struct {
@@ -55,6 +56,7 @@ func (c Client) GetCredential() (cred AuthenticatedCredential, err error) {
 	}
 
 	var ok bool
+	fmt.Println(val)
 	if cred, ok = val.(AuthenticatedCredential); !ok {
 		err = bridge.ReturnTypeError("AuthenticatedCredential")
 	}
@@ -63,7 +65,7 @@ func (c Client) GetCredential() (cred AuthenticatedCredential, err error) {
 
 func (c Client) LoadConsumer(consumer_id string, by_username bool) (consumer entities.Consumer, err error) {
 	var reply interface{}
-	reply, err = c.Ask(`kong.client.load_consumer`)
+	reply, err = c.Ask(`kong.client.load_consumer`, consumer_id, by_username)
 	if err != nil {
 		return
 	}

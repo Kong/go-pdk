@@ -14,6 +14,7 @@ import (
 	service_response "github.com/Kong/go-pdk/service/response"
 )
 
+// PDK go pdk module
 type PDK struct {
 	Client          client.Client
 	Log             log.Log
@@ -21,13 +22,14 @@ type PDK struct {
 	Request         request.Request
 	Response        response.Response
 	Router          router.Router
-	Ip              ip.Ip
+	IP              ip.Ip
 	Node            node.Node
 	Service         service.Service
 	ServiceRequest  service_request.Request
 	ServiceResponse service_response.Response
 }
 
+// Init initialize go pdk
 func Init(ch chan interface{}) *PDK {
 	return &PDK{
 		Client:          client.New(ch),
@@ -36,7 +38,7 @@ func Init(ch chan interface{}) *PDK {
 		Request:         request.New(ch),
 		Response:        response.New(ch),
 		Router:          router.New(ch),
-		Ip:              ip.New(ch),
+		IP:              ip.New(ch),
 		Node:            node.New(ch),
 		Service:         service.New(ch),
 		ServiceRequest:  service_request.New(ch),

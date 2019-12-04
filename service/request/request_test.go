@@ -2,65 +2,63 @@ package request
 
 import (
 	"testing"
-
+	"github.com/Kong/go-pdk/bridge"
 	"github.com/stretchr/testify/assert"
 )
 
 var request Request
-var ch chan string
+var ch chan interface{}
 
 func init() {
-	ch = make(chan string)
+	ch = make(chan interface{})
 	request = New(ch)
 }
 
-func getName(f func()) string {
+func getBack(f func()) interface{} {
 	go f()
-	name := <-ch
-	ch <- ""
-	return name
+	d := <-ch
+	ch <- nil
+
+	return d
 }
 
 func TestSetScheme(t *testing.T) {
-	assert.Equal(t, `kong.service.request.set_scheme:["http"]`, getName(func() { request.SetScheme("http") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.set_scheme", Args:[]interface{}{"http"}}, getBack(func() { request.SetScheme("http") }))
 }
 
 func TestSetPath(t *testing.T) {
-	assert.Equal(t, `kong.service.request.set_path:["/foo"]`, getName(func() { request.SetPath("/foo") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.set_path", Args:[]interface{}{"/foo"}}, getBack(func() { request.SetPath("/foo") }))
 }
 
 func TestSetRawQuery(t *testing.T) {
-	assert.Equal(t, `kong.service.request.set_raw_query:["q1=v1\u0026q2=v2"]`, getName(func() { request.SetRawQuery("q1=v1&q2=v2") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.set_raw_query", Args:[]interface{}{"name=foo"}}, getBack(func() { request.SetRawQuery("name=foo") }))
 }
 
 func TestSetMethod(t *testing.T) {
-	assert.Equal(t, `kong.service.request.set_method:["GET"]`, getName(func() { request.SetMethod("GET") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.set_method", Args:[]interface{}{"GET"}}, getBack(func() { request.SetMethod("GET") }))
 }
 
 func TestSetQuery(t *testing.T) {
-	assert.Equal(t, `kong.service.request.set_query:["q1=v2\u0026q2=v2"]`, getName(func() { request.SetQuery("q1=v2&q2=v2") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.set_query", Args:[]interface{}{"foo"}}, getBack(func() { request.SetQuery("foo") }))
 }
 
 func TestSetHeader(t *testing.T) {
-	assert.Equal(t, `kong.service.request.set_header:["q1","v1"]`, getName(func() { request.SetHeader("q1", "v1") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.set_header", Args:[]interface{}{"foo", "bar"}}, getBack(func() { request.SetHeader("foo", "bar") }))
 }
 
 func TestAddHeader(t *testing.T) {
-	assert.Equal(t, `kong.service.request.add_header:["q1","v1"]`, getName(func() { request.AddHeader("q1", "v1") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.add_header", Args:[]interface{}{"foo", "bar"}}, getBack(func() { request.AddHeader("foo", "bar") }))
 }
 
 func TestClearHeader(t *testing.T) {
-	assert.Equal(t, `kong.service.request.clear_header:["q1"]`, getName(func() { request.ClearHeader("q1") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.clear_header", Args:[]interface{}{"foo"}}, getBack(func() { request.ClearHeader("foo") }))
 }
 
 func TestSetHeaders(t *testing.T) {
-	assert.Equal(t, `kong.service.request.set_headers:[{"h1":"v1"}]`, getName(func() {
-		request.SetHeaders(map[string]interface{}{
-			"h1": "v1",
-		})
-	}))
+	var h map[string]interface{} = nil
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.set_headers", Args:[]interface{}{h}}, getBack(func() { request.SetHeaders(nil) }))
 }
 
 func TestSetRawBody(t *testing.T) {
-	assert.Equal(t, `kong.service.request.set_raw_body:["body"]`, getName(func() { request.SetRawBody("body") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.set_raw_body", Args:[]interface{}{"foo"}}, getBack(func() { request.SetRawBody("foo") }))
 }

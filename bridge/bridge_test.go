@@ -23,25 +23,23 @@ func TestAsk(t *testing.T) {
 	call := <-ch
 	ch <- ""
 
-	assert.Equal(t, call, stepData{
+	assert.Equal(t, call, StepData{
 		Method: "foo.bar",
 		Args: []interface{} {1, 2, 3, 1.23, false},
 	})
-// 	assert.Equal(t, call, "foo.bar:[1,2,3,1.23,false]")
 
 	go func() {
 		n := "gs"
-		bridge.Ask("foo.bar", entities.Consumer{Username: &n})
+		bridge.Ask("foo.bar", entities.Consumer{Username: n})
 	}()
 
 	call = <-ch
 	ch <- ""
 
 	n := "gs"
-	consumer := []interface{} {entities.Consumer{Username: &n}}
-	assert.Equal(t, stepData{
+	consumer := []interface{} {entities.Consumer{Username: n}}
+	assert.Equal(t, StepData{
 		Method: "foo.bar",
 		Args: consumer,
 	}, call)
-// 	assert.Equal(t, `foo.bar:[{"id":"","created_at":0,"username":"gs","custom_id":null,"tags":null}]`, call)
 }

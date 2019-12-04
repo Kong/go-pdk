@@ -3,22 +3,24 @@ package log
 import (
 	"testing"
 
+	"github.com/Kong/go-pdk/bridge"
 	"github.com/stretchr/testify/assert"
 )
 
 var log Log
-var ch chan string
+var ch chan interface{}
 
 func init() {
-	ch = make(chan string)
+	ch = make(chan interface{})
 	log = New(ch)
 }
 
-func getName(f func()) string {
+func getBack(f func()) interface{} {
 	go f()
-	name := <-ch
-	ch <- ""
-	return name
+	d := <-ch
+	ch <- nil
+
+	return d
 }
 
 func getStrValue(f func(res chan string), val string) string {
@@ -30,42 +32,33 @@ func getStrValue(f func(res chan string), val string) string {
 }
 
 func TestAlert(t *testing.T) {
-	assert.Equal(t, `kong.log.alert:["a","b"]`, getName(func() { log.Alert("a", "b") }))
-	assert.Equal(t, `kong.log.alert:["a","b","c"]`, getName(func() { log.Alert("a", "b", "c") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.log.alert", Args:[]interface{}{"Alo"}}, getBack(func() { log.Alert("Alo") }))
 }
 
 func TestCrit(t *testing.T) {
-	assert.Equal(t, `kong.log.crit:["a","b"]`, getName(func() { log.Crit("a", "b") }))
-	assert.Equal(t, `kong.log.crit:["a","b","c"]`, getName(func() { log.Crit("a", "b", "c") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.log.crit", Args:[]interface{}{"Alo"}}, getBack(func() { log.Crit("Alo") }))
 }
 
 func TestErr(t *testing.T) {
-	assert.Equal(t, `kong.log.err:["a","b"]`, getName(func() { log.Err("a", "b") }))
-	assert.Equal(t, `kong.log.err:["a","b","c"]`, getName(func() { log.Err("a", "b", "c") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.log.err", Args:[]interface{}{"Alo"}}, getBack(func() { log.Err("Alo") }))
 }
 
 func TestWarn(t *testing.T) {
-	assert.Equal(t, `kong.log.warn:["a","b"]`, getName(func() { log.Warn("a", "b") }))
-	assert.Equal(t, `kong.log.warn:["a","b","c"]`, getName(func() { log.Warn("a", "b", "c") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.log.warn", Args:[]interface{}{"Alo"}}, getBack(func() { log.Warn("Alo") }))
 }
 
 func TestNotice(t *testing.T) {
-	assert.Equal(t, `kong.log.notice:["a","b"]`, getName(func() { log.Notice("a", "b") }))
-	assert.Equal(t, `kong.log.notice:["a","b","c"]`, getName(func() { log.Notice("a", "b", "c") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.log.notice", Args:[]interface{}{"Alo"}}, getBack(func() { log.Notice("Alo") }))
 }
 
 func TestInfo(t *testing.T) {
-	assert.Equal(t, `kong.log.info:["a","b"]`, getName(func() { log.Info("a", "b") }))
-	assert.Equal(t, `kong.log.info:["a","b","c"]`, getName(func() { log.Info("a", "b", "c") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.log.info", Args:[]interface{}{"Alo"}}, getBack(func() { log.Info("Alo") }))
 }
 
 func TestDebug(t *testing.T) {
-	assert.Equal(t, `kong.log.debug:["a","b"]`, getName(func() { log.Debug("a", "b") }))
-	assert.Equal(t, `kong.log.debug:["a","b","c"]`, getName(func() { log.Debug("a", "b", "c") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.log.debug", Args:[]interface{}{"Alo"}}, getBack(func() { log.Debug("Alo") }))
 }
 
 func TestSerialize(t *testing.T) {
-	assert.Equal(t, "kong.log.serialize:null", getName(func() { log.Serialize() }))
-	assert.Equal(t, "", getStrValue(func(res chan string) { r, _ := log.Serialize(); res <- r }, ""))
-	assert.Equal(t, "foo", getStrValue(func(res chan string) { r, _ := log.Serialize(); res <- r }, "foo"))
+	assert.Equal(t, bridge.StepData{Method:"kong.log.serialize"}, getBack(func() { log.Serialize() }))
 }
