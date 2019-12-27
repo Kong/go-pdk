@@ -12,5 +12,6 @@ before_script:
   - go get -v -u golang.org/x/lint/golint
 
 script:
-  - golint
-  - go test -v -race ./...
+  - make dep
+  - make lint
+  - make test
