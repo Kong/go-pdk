@@ -31,25 +31,25 @@ func getBack(f func()) interface{} {
 }
 
 func TestGetVar(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.nginx.get_var", Args:[]interface{}{"foo"}}, getBack(func() { nginx.GetVar("foo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.nginx.get_var", Args: []interface{}{"foo"}}, getBack(func() { nginx.GetVar("foo") }))
 }
 
 func TestGetTLS1VersionStr(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.nginx.get_tls1_version_str"}, getBack(func() { nginx.GetTLS1VersionStr() }))
+	assert.Equal(t, bridge.StepData{Method: "kong.nginx.get_tls1_version_str"}, getBack(func() { nginx.GetTLS1VersionStr() }))
 }
 
 func TestGetCtxAny(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.nginx.get_ctx", Args:[]interface{}{"foo"}}, getBack(func() { nginx.GetCtxAny("foo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.nginx.get_ctx", Args: []interface{}{"foo"}}, getBack(func() { nginx.GetCtxAny("foo") }))
 }
 
 func TestGetCtxString(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.nginx.get_ctx", Args:[]interface{}{"foo"}}, getBack(func() { nginx.GetCtxString("foo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.nginx.get_ctx", Args: []interface{}{"foo"}}, getBack(func() { nginx.GetCtxString("foo") }))
 }
 
 func TestGetCtxFloat(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.nginx.get_ctx", Args:[]interface{}{"foo"}}, getBack(func() { nginx.GetCtxFloat("foo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.nginx.get_ctx", Args: []interface{}{"foo"}}, getBack(func() { nginx.GetCtxFloat("foo") }))
 }
 
 func TestReqStartTime(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.nginx.get_ctx", Args:[]interface{}{"foo"}}, getBack(func() { nginx.GetCtxFloat("foo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.nginx.get_ctx", Args: []interface{}{"foo"}}, getBack(func() { nginx.GetCtxFloat("foo") }))
 }

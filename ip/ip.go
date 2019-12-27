@@ -14,7 +14,7 @@ package ip
 
 import (
 	"github.com/Kong/go-pdk/bridge"
-// 	"strconv"
+	// 	"strconv"
 )
 
 // Holds this module's functions.  Accessible as `kong.Ip`
