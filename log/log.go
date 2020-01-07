@@ -4,10 +4,12 @@ import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+// Holds this module's functions.  Accessible as `kong.Log`
 type Log struct {
 	bridge.PdkBridge
 }
 
+// Called by the plugin server at initialization.
 func New(ch chan interface{}) Log {
 	return Log{bridge.New(ch)}
 }
