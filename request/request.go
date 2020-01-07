@@ -1,21 +1,31 @@
+/*
+A set of functions to retrieve information about the incoming requests made by clients.
+*/
 package request
 
 import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+// Holds this module's functions.  Accessible as `kong.Request`
 type Request struct {
 	bridge.PdkBridge
 }
 
+// Called by the plugin server at initialization.
 func New(ch chan interface{}) Request {
 	return Request{bridge.New(ch)}
 }
 
+// kong.Request.GetScheme() returns the scheme component of the request’s URL.
+// The returned value is normalized to lower-case form.
 func (r Request) GetScheme() (s string, err error) {
 	return r.AskString(`kong.request.get_scheme`)
 }
 
+// kong.Request.GetHost() returns the host component of the request’s URL,
+// or the value of the “Host” header. The returned value is normalized
+// to lower-case form.
 func (r Request) GetHost() (host string, err error) {
 	return r.AskString(`kong.request.get_host`)
 }
@@ -42,6 +52,20 @@ func (r Request) GetForwardedScheme() (s string, err error) {
 	return r.AskString(`kong.request.get_forwarded_scheme`)
 }
 
+// kong.Request.GetForwardedHost() returns the host component of the request’s URL
+// or the value of the “host” header. Unlike kong.Request.GetHost(), this function
+// will also consider X-Forwarded-Host if it comes from a trusted source.
+// The returned value is normalized to lower-case.
+//
+// Whether this function considers X-Forwarded-Proto or not depends
+// on several Kong configuration parameters:
+//
+//   - trusted_ips
+//   - real_ip_header
+//   - real_ip_recursive
+//
+// Note: we do not currently offer support for Forwarded HTTP Extension (RFC 7239)
+// since it is not supported by ngx_http_realip_module.
 func (r Request) GetForwardedHost() (host string, err error) {
 	return r.AskString(`kong.request.get_forwarded_host`)
 }
@@ -69,18 +93,27 @@ func (r Request) GetHttpVersion() (version float64, err error) {
 	return r.AskFloat(`kong.request.get_http_version`)
 }
 
+// kong.Request.GetMethod() returns the HTTP method of the request.
+// The value is normalized to upper-case.
 func (r Request) GetMethod() (m string, err error) {
 	return r.AskString(`kong.request.get_method`)
 }
 
+// kong.Request.GetPath() returns the path component of the request’s URL.
+// It is not normalized in any way and does not include the querystring.
 func (r Request) GetPath() (string, error) {
 	return r.AskString(`kong.request.get_path`)
 }
 
+// kong.Request.GetPathWithQuery() returns the path, including
+// the querystring if any. No transformations/normalizations are done.
 func (r Request) GetPathWithQuery() (string, error) {
 	return r.AskString(`kong.request.get_path_with_query`)
 }
 
+// kong.Request.GetRawQuery() returns the query component of the request’s URL.
+// It is not normalized in any way (not even URL-decoding of special characters)
+// and does not include the leading ? character.
 func (r Request) GetRawQuery() (string, error) {
 	return r.AskString(`kong.request.get_raw_query`)
 }
@@ -150,6 +183,13 @@ func (r Request) GetHeaders(max_headers int) (map[string]interface{}, error) {
 	return r.AskMap(`kong.request.get_headers`, max_headers)
 }
 
+// kong.Request.GetRawBody() returns the plain request body.
+//
+// If the body has no size (empty), this function returns an empty string.
+//
+// If the size of the body is greater than the Nginx buffer size
+// (set by client_body_buffer_size), this function will fail
+// and return an error message explaining this limitation.
 func (r Request) GetRawBody() (string, error) {
 	return r.AskString(`kong.request.get_raw_body`)
 }

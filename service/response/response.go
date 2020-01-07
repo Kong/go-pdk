@@ -1,15 +1,18 @@
+/*
+Manipulation of the response from the Service.
+*/
 package response
 
 import (
-// 	"strconv"
-
 	"github.com/Kong/go-pdk/bridge"
 )
 
+// Holds this module's functions.  Accessible as `kong.ServiceResponse`
 type Response struct {
 	bridge.PdkBridge
 }
 
+// Called by the plugin server at initialization.
 func New(ch chan interface{}) Response {
 	return Response{bridge.New(ch)}
 }
@@ -45,6 +48,11 @@ func (r Response) GetHeaders(max_headers int) (map[string]interface{}, error) {
 	return r.AskMap(`kong.service.response.get_headers`, max_headers)
 }
 
+// kong.ServiceResponse.GetHeader() returns the value of the specified response header.
+//
+// Unlike kong.Response.GetHeader(), this function will only return a header
+// if it was present in the response from the Service
+// (ignoring headers added by Kong itself).
 func (r Response) GetHeader(name string) (string, error) {
 	return r.AskString(`kong.service.response.get_header`, name)
 }

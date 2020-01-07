@@ -1,3 +1,18 @@
+/*
+Package Kong/go-pdk implements Kong's Plugin Development Kit for Go.
+
+It directly parallels the existing kong PDK for Lua plugins.
+
+Kong plugins written in Go implement event handlers as methods on the Plugin's
+structure, with the given signature:
+
+	func (conf *MyConfig) Access (kong *pdk.PDK) {
+		...
+	}
+
+The `kong` argument of type `*pdk.PDK` is the entrypoint for all PDK functions.
+For example, to get the client's IP address, you'd use `kong.Client.GetIp()`.
+*/
 package pdk
 
 import (
@@ -29,7 +44,7 @@ type PDK struct {
 	ServiceResponse service_response.Response
 }
 
-// Init initialize go pdk
+// Init initialize go pdk.  Called by the pluginserver at initialization.
 func Init(ch chan interface{}) *PDK {
 	return &PDK{
 		Client:          client.New(ch),
