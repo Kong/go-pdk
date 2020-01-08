@@ -19,8 +19,6 @@ func New(ch chan interface{}) Response {
 
 // kong.ServiceResponse.GetStatus() returns the HTTP status code
 // of the response from the Service as an integer.
-//
-// TODO: nil or error on non-proxy requests?
 func (r Response) GetStatus() (i int, err error) {
 	return r.AskInt(`kong.service.response.get_status`)
 }
@@ -31,8 +29,6 @@ func (r Response) GetStatus() (i int, err error) {
 // if a header was sent multiple times. Header names in this table are
 // case-insensitive and dashes (-) can be written as underscores (_);
 // that is, the header X-Custom-Header can also be retrieved as x_custom_header.
-//
-// TODO: this is too dynamic-type-happy.  better switch to something more static like.
 //
 // Unlike kong.Response.GetHeaders(), this function will only return headers
 // that were present in the response from the Service (ignoring headers added

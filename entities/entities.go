@@ -1,3 +1,6 @@
+/*
+Some struct definitons for Kong entities.
+*/
 package entities
 
 type ServiceKey struct {

@@ -1,5 +1,5 @@
 /*
-Trusted IPs module
+Trusted IPs module.
 
 This module can be used to determine whether or not a given IP address
 is in the range of trusted IP addresses defined by the trusted_ips

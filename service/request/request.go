@@ -39,8 +39,6 @@ func (r Request) SetPath(path string) error {
 //
 // For a higher-level function to set the query string from a ???? of arguments,
 // see kong.ServiceRequest.SetQuery().
-//
-// TODO: is this really working as described? the only argument is a string...
 func (r Request) SetRawQuery(query string) error {
 	_, err := r.Ask(`kong.service.request.set_raw_query`, query)
 	return err
@@ -69,8 +67,6 @@ func (r Request) SetMethod(method string) error {
 //
 // If further control of the querystring generation is needed, a raw querystring
 // can be given as a string with kong.ServiceRequest.SetRawQuery().
-//
-// TODO: is this really working as described? the only argument is a string...
 func (r Request) SetQuery(query string) error {
 	_, err := r.Ask(`kong.service.request.set_query`, query)
 	return err
@@ -130,7 +126,6 @@ func (r Request) SetHeaders(headers map[string]interface{}) error {
 //
 // For a higher-level function to set the body based on the request content type,
 // see kong.ServiceRequest.SetBody().
-// TODO: SetBody()
 func (r Request) SetRawBody(body string) error {
 	_, err := r.Ask(`kong.service.request.set_raw_body`, body)
 	return err

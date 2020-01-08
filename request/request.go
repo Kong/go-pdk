@@ -32,7 +32,7 @@ func (r Request) GetHost() (host string, err error) {
 
 // kong.Request.GetPort() returns the port component of the request’s URL.
 func (r Request) GetPort() (port string, err error) {
-	return r.AskString(`kong.request.get_port`)	// TODO: why a string?
+	return r.AskString(`kong.request.get_port`)
 }
 
 // kong.Request.GetForwardedScheme() returns the scheme component
@@ -83,14 +83,14 @@ func (r Request) GetForwardedHost() (host string, err error) {
 // Note: we do not currently offer support for Forwarded HTTP Extension (RFC 7239)
 // since it is not supported by ngx_http_realip_module.
 func (r Request) GetForwardedPort() (port string, err error) {
-	return r.AskString(`kong.request.get_forwarded_port`)	// TODO: why a string?
+	return r.AskString(`kong.request.get_forwarded_port`)
 }
 
 // kong.Request.GetHttpVersion() returns the HTTP version
 // used by the client in the request, returning values
 // such as "1"", "1.1", "2.0", or nil for unrecognized values.
 func (r Request) GetHttpVersion() (version string, err error) {
-	return r.AskString(`kong.request.get_http_version`)		// TODO: why a string?  nil or error for unrecognized values?
+	return r.AskString(`kong.request.get_http_version`)
 }
 
 // kong.Request.GetMethod() returns the HTTP method of the request.
@@ -127,7 +127,7 @@ func (r Request) GetRawQuery() (string, error) {
 // If an argument with the same name is present multiple times in the querystring,
 // this function will return the value of the first occurrence.
 func (r Request) GetQueryArg() (string, error) {
-	return r.AskString(`kong.request.get_query_arg`)	// TODO: where's the argument?  nil or error if not found?
+	return r.AskString(`kong.request.get_query_arg`)
 }
 
 // kong.Request.GetQuery() returns a map of query arguments
@@ -143,8 +143,6 @@ func (r Request) GetQueryArg() (string, error) {
 // The max_args argument specifies the maximum number of returned arguments.
 // Must be greater than 1 and not greater than 1000, or -1 to specify the
 // default limit of 100 arguments.
-//
-// TODO: this is too dynamic-type-happy.  better switch to something more static like.
 func (r Request) GetQuery(max_args int) (map[string]interface{}, error) {
 	if max_args == -1 {
 		return r.AskMap("kong.request.get_query")
@@ -163,8 +161,6 @@ func (r Request) GetQuery(max_args int) (map[string]interface{}, error) {
 // Header names in are case-insensitive and are normalized to lowercase,
 // and dashes (-) can be written as underscores (_); that is, the header
 // X-Custom-Header can also be retrieved as x_custom_header.
-//
-// TODO: nil or error if not found?
 func (r Request) GetHeader(k string) (string, error) {
 	return r.AskString(`kong.request.get_header`, k)
 }
@@ -179,8 +175,6 @@ func (r Request) GetHeader(k string) (string, error) {
 // The max_args argument specifies the maximum number of returned headers.
 // Must be greater than 1 and not greater than 1000, or -1 to specify the
 // default limit of 100 headers.
-//
-// TODO: this is too dynamic-type-happy.  better switch to something more static like.
 func (r Request) GetHeaders(max_headers int) (map[string]interface{}, error) {
 	if max_headers == -1 {
 		return r.AskMap(`kong.request.get_headers`)

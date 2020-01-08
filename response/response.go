@@ -35,7 +35,6 @@ func New(ch chan interface{}) Response {
 // If the request was not proxied, and the response was produced
 // by Kong itself (i.e. via kong.Response.Exit()), the return value
 // will be returned as-is.
-// TODO: kong.Response.Exit()
 func (r Response) GetStatus() (int, error) {
 	return r.AskInt(`kong.response.get_status`)
 }
@@ -51,7 +50,6 @@ func (r Response) GetStatus() (int, error) {
 // with name was not found in the response. If a header with the
 // same name is present multiple times in the request, this function
 // will return the value of the first occurrence of this header.
-// TODO: nil or error if not found?
 //
 // Header names are case-insensitive and dashes (-) can be written
 // as underscores (_); that is, the header X-Custom-Header
@@ -79,8 +77,6 @@ func (r Response) GetHeader(name string) (string, error) {
 // The max_args argument specifies the maximum number of returned headers.
 // Must be greater than 1 and not greater than 1000, or -1 to specify the
 // default limit of 100 arguments.
-//
-// TODO: this is too dynamic-type-happy.  better switch to something more static like.
 func (r Response) GetHeaders(max_headers int) (res map[string]interface{}, err error) {
 	if max_headers == -1 {
 		return r.AskMap(`kong.response.get_headers`)
@@ -115,7 +111,6 @@ func (r Response) GetSource() (string, error) {
 //
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
-// TODO: there's no header_filter phase; does this comment still make sense?
 func (r Response) SetStatus(status int) error {
 	_, err := r.Ask(`kong.response.set_status`, status)
 	return err
@@ -126,7 +121,6 @@ func (r Response) SetStatus(status int) error {
 //
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
-// TODO: there's no header_filter phase; does this comment still make sense?
 func (r Response) SetHeader(k string, v string) error {
 	_, err := r.Ask(`kong.response.set_header`, k, v)
 	return err
@@ -141,7 +135,6 @@ func (r Response) SetHeader(k string, v string) error {
 //
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
-// TODO: there's no header_filter phase; does this comment still make sense?
 func (r Response) AddHeader(k string, v string) error {
 	_, err := r.Ask(`kong.response.add_header`, k, v)
 	return err
@@ -152,7 +145,6 @@ func (r Response) AddHeader(k string, v string) error {
 //
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
-// TODO: there's no header_filter phase; does this comment still make sense?
 func (r Response) ClearHeader(k string) error {
 	_, err := r.Ask(`kong.response.clear_header`, k)
 	return err
@@ -165,7 +157,6 @@ func (r Response) ClearHeader(k string) error {
 //
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
-// TODO: there's no header_filter phase; does this comment still make sense?
 //
 // The resulting headers are produced in lexicographical order.
 // The order of entries with the same name (when values are given
