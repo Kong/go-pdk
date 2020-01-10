@@ -75,7 +75,7 @@ func TestGetRawQuery(t *testing.T) {
 }
 
 func TestGetQueryArg(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.request.get_query_arg"}, getBack(func() { request.GetQueryArg() }))
+	assert.Equal(t, bridge.StepData{Method:"kong.request.get_query_arg", Args:[]interface{}{"foo"}}, getBack(func() { request.GetQueryArg("foo") }))
 }
 
 func TestGetQuery(t *testing.T) {
