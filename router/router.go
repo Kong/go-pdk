@@ -1,3 +1,6 @@
+/*
+A set of functions to access the routing properties of the request.
+*/
 package router
 
 import (

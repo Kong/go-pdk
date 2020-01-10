@@ -1,3 +1,6 @@
+/*
+Write to log file.
+*/
 package log
 
 import (

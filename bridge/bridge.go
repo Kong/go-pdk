@@ -1,3 +1,6 @@
+/*
+Used internally for the RPC protocol.
+*/
 package bridge
 
 import (
