@@ -32,7 +32,7 @@ func (r Request) SetMethod(method string) error {
 	return err
 }
 
-func (r Request) SetQuery(query string) error {
+func (r Request) SetQuery(query map[string]interface{}) error {
 	_, err := r.Ask(`kong.service.request.set_query`, query)
 	return err
 }

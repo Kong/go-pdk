@@ -39,7 +39,7 @@ func TestSetMethod(t *testing.T) {
 }
 
 func TestSetQuery(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.service.request.set_query", Args:[]interface{}{"foo"}}, getBack(func() { request.SetQuery("foo") }))
+	assert.Equal(t, bridge.StepData{Method:"kong.service.request.set_query", Args:[]interface{}{map[string]interface{}{"foo":"bar"}}}, getBack(func() { request.SetQuery(map[string]interface{}{"foo":"bar"}) }))
 }
 
 func TestSetHeader(t *testing.T) {
