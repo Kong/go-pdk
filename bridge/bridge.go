@@ -39,9 +39,29 @@ func (b PdkBridge) AskInt(method string, args ...interface{}) (i int, err error)
 		return
 	}
 
-	var ok bool
-	if i, ok = val.(int); !ok {
-		err = ReturnTypeError("integer")
+	switch val := val.(type) {
+		case int:
+			i = int(val)
+		case int8:
+			i = int(val)
+		case int16:
+			i =int(val)
+		case int32:
+			i = int(val)
+		case int64:
+			i = int(val)
+		case uint:
+			i = int(val)
+		case uint8:
+			i = int(val)
+		case uint16:
+			i = int(val)
+		case uint32:
+			i = int(val)
+		case uint64:
+			i = int(val)
+		default:
+			err = ReturnTypeError("integer")
 	}
 	return
 }
