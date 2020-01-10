@@ -1,3 +1,6 @@
+/*
+Access Nginx variables.
+*/
 package nginx
 
 import (
