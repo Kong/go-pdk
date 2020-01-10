@@ -56,8 +56,8 @@ func (r Request) GetRawQuery() (string, error) {
 	return r.AskString(`kong.request.get_raw_query`)
 }
 
-func (r Request) GetQueryArg() (string, error) {
-	return r.AskString(`kong.request.get_query_arg`)
+func (r Request) GetQueryArg(k string) (string, error) {
+	return r.AskString(`kong.request.get_query_arg`, k)
 }
 
 func (r Request) GetQuery(max_args int) (map[string]interface{}, error) {
