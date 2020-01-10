@@ -36,8 +36,8 @@ func (r Request) GetForwardedPort() (int, error) {
 	return r.AskInt(`kong.request.get_forwarded_port`)
 }
 
-func (r Request) GetHttpVersion() (version string, err error) {
-	return r.AskString(`kong.request.get_http_version`)
+func (r Request) GetHttpVersion() (version float64, err error) {
+	return r.AskFloat(`kong.request.get_http_version`)
 }
 
 func (r Request) GetMethod() (m string, err error) {
