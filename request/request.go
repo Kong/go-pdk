@@ -20,8 +20,8 @@ func (r Request) GetHost() (host string, err error) {
 	return r.AskString(`kong.request.get_host`)
 }
 
-func (r Request) GetPort() (port string, err error) {
-	return r.AskString(`kong.request.get_port`)
+func (r Request) GetPort() (int, error) {
+	return r.AskInt(`kong.request.get_port`)
 }
 
 func (r Request) GetForwardedScheme() (s string, err error) {
@@ -32,8 +32,8 @@ func (r Request) GetForwardedHost() (host string, err error) {
 	return r.AskString(`kong.request.get_forwarded_host`)
 }
 
-func (r Request) GetForwardedPort() (port string, err error) {
-	return r.AskString(`kong.request.get_forwarded_port`)
+func (r Request) GetForwardedPort() (int, error) {
+	return r.AskInt(`kong.request.get_forwarded_port`)
 }
 
 func (r Request) GetHttpVersion() (version string, err error) {
