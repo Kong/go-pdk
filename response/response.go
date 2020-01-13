@@ -77,7 +77,7 @@ func (r Response) GetHeader(name string) (string, error) {
 // The max_args argument specifies the maximum number of returned headers.
 // Must be greater than 1 and not greater than 1000, or -1 to specify the
 // default limit of 100 arguments.
-func (r Response) GetHeaders(max_headers int) (res map[string]interface{}, err error) {
+func (r Response) GetHeaders(max_headers int) (res map[string][]string, err error) {
 	if max_headers == -1 {
 		return r.AskMap(`kong.response.get_headers`)
 	}

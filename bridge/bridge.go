@@ -119,15 +119,15 @@ func (b PdkBridge) AskString(method string, args ...interface{}) (s string, err 
 	return
 }
 
-func (b PdkBridge) AskMap(method string, args ...interface{}) (m map[string]interface{}, err error) {
+func (b PdkBridge) AskMap(method string, args ...interface{}) (m map[string][]string, err error) {
 	val, err := b.Ask(method, args...)
 	if err != nil {
 		return
 	}
 
 	var ok bool
-	if m, ok = val.(map[string]interface{}); !ok {
-		err = ReturnTypeError("map[string]interface{}")
+	if m, ok = val.(map[string][]string); !ok {
+		err = ReturnTypeError("map[string][]string")
 	}
 	return
 }

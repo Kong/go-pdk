@@ -143,7 +143,7 @@ func (r Request) GetQueryArg(k string) (string, error) {
 // The max_args argument specifies the maximum number of returned arguments.
 // Must be greater than 1 and not greater than 1000, or -1 to specify the
 // default limit of 100 arguments.
-func (r Request) GetQuery(max_args int) (map[string]interface{}, error) {
+func (r Request) GetQuery(max_args int) (map[string][]string, error) {
 	if max_args == -1 {
 		return r.AskMap("kong.request.get_query")
 	}
@@ -175,7 +175,7 @@ func (r Request) GetHeader(k string) (string, error) {
 // The max_args argument specifies the maximum number of returned headers.
 // Must be greater than 1 and not greater than 1000, or -1 to specify the
 // default limit of 100 headers.
-func (r Request) GetHeaders(max_headers int) (map[string]interface{}, error) {
+func (r Request) GetHeaders(max_headers int) (map[string][]string, error) {
 	if max_headers == -1 {
 		return r.AskMap(`kong.request.get_headers`)
 	}
