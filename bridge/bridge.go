@@ -24,7 +24,7 @@ func (b PdkBridge) Ask(method string, args ...interface{}) (interface{}, error) 
 	b.ch <- StepData{ method, args }
 
 	reply := <-b.ch
-	if reply == "null" {
+	if reply == nil {
 		return nil, errors.New("null response")
 	}
 
