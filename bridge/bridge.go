@@ -24,9 +24,6 @@ func (b PdkBridge) Ask(method string, args ...interface{}) (interface{}, error) 
 	b.ch <- StepData{ method, args }
 
 	reply := <-b.ch
-	if reply == nil {
-		return nil, errors.New("null response")
-	}
 
 	err, ok := reply.(error)
 	if ok {
@@ -39,6 +36,10 @@ func (b PdkBridge) Ask(method string, args ...interface{}) (interface{}, error) 
 func (b PdkBridge) AskInt(method string, args ...interface{}) (i int, err error) {
 	val, err := b.Ask(method, args...)
 	if err != nil {
+		return
+	}
+	if val == nil {
+		err = errors.New("null response")
 		return
 	}
 
@@ -72,6 +73,10 @@ func (b PdkBridge) AskInt(method string, args ...interface{}) (i int, err error)
 func (b PdkBridge) AskFloat(method string, args ...interface{}) (f float64, err error) {
 	val, err := b.Ask(method, args...)
 	if err != nil {
+		return
+	}
+	if val == nil {
+		err = errors.New("null response")
 		return
 	}
 
@@ -109,6 +114,10 @@ func (b PdkBridge) AskFloat(method string, args ...interface{}) (f float64, err 
 func (b PdkBridge) AskString(method string, args ...interface{}) (s string, err error) {
 	val, err := b.Ask(method, args...)
 	if err != nil {
+		return
+	}
+	if val == nil {
+		err = errors.New("null response")
 		return
 	}
 
