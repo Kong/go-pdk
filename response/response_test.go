@@ -51,6 +51,6 @@ func TestClearHeader(t *testing.T) {
 }
 
 func TestSetHeaders(t *testing.T) {
-	var m map[string]interface{} = nil
+	var m map[string][]string = nil
 	assert.Equal(t, bridge.StepData{Method:"kong.response.set_headers", Args:[]interface{}{m}}, getBack(func() { response.SetHeaders(nil) }))
 }
