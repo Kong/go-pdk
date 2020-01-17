@@ -33,6 +33,11 @@ func (b PdkBridge) Ask(method string, args ...interface{}) (interface{}, error) 
 	return reply, nil
 }
 
+func (b PdkBridge) AskClose(method string, args ...interface{}) {
+	b.ch <- StepData{ method, args }
+	close(b.ch)
+}
+
 func (b PdkBridge) AskInt(method string, args ...interface{}) (i int, err error) {
 	val, err := b.Ask(method, args...)
 	if err != nil {

@@ -101,7 +101,6 @@ func (r Response) GetHeaders(max_headers int) (res map[string][]string, err erro
 //
 // - “service” is returned when the response was originated by
 // successfully contacting the proxied Service.
-//
 func (r Response) GetSource() (string, error) {
 	return r.AskString(`kong.response.get_source`)
 }
@@ -170,4 +169,38 @@ func (r Response) SetHeaders(headers map[string][]string) error {
 	return err
 }
 
-// TODO exit
+// kong.Response.Exit() interrupts the current processing and produces a response.
+// It is typical to see plugins using it to produce a response before Kong
+// has a chance to proxy the request (e.g. an authentication plugin rejecting
+// a request, or a caching plugin serving a cached response).
+//
+// This function closes the channel back to Kong main process, so any use of a
+// PDK function after this would trigger a run-time panic.  It is recommended to
+// stop all processing and return immediately from the handler.
+//
+// Calling `kong.Response.Exit()` will interrupt the execution flow of
+// plugins in the current phase. Subsequent phases will still be invoked.
+// E.g. if a plugin called `kong.Response.Exit()` in the `access` phase, no
+// other plugin will be executed in that phase, but the `header_filter`,
+// `body_filter`, and `log` phases will still be executed, along with their
+// plugins. Plugins should thus be programmed defensively against cases when
+// a request was **not** proxied to the Service, but instead was produced by
+// Kong itself.
+//
+// The first argument `status` will set the status code of the response that
+// will be seen by the client.
+//
+// The second, `body` argument will set the response body. No special processing
+// will be done, and the body will be sent as-is.  It is the caller's responsibility
+// to set the appropriate Content-Type header via the third argument.   On gRPC
+// we cannot send the `body` with this function at the moment at least, so what it does
+// instead is that it sends "body" in `grpc-message` header instead.
+//
+// The third, `headers` argument can be a table specifying response headers to send.
+// If non nil, its behavior is similar to `kong.response.set_headers()`.
+//
+// Unless manually specified, this method will automatically set the
+// Content-Length header in the produced response for convenience.
+func (r Response) Exit(status int, body string, headers map[string][]string) {
+	r.AskClose(`kong.response.exit`, status, body, headers)
+}
