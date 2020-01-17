@@ -12,7 +12,7 @@ import (
 	"fmt"
 )
 
-// Holds this module's functions.  Accessible as `kong.Cient`
+// Holds this module's functions.  Accessible as `kong.Client`
 type Client struct {
 	bridge.PdkBridge
 }
