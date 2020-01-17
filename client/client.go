@@ -13,7 +13,7 @@ import (
 	"github.com/Kong/go-pdk/entities"
 )
 
-// Holds this module's functions.  Accessible as `kong.Client`
+// Holds this module's functions.  Accessible as `kong.Client`.
 type Client struct {
 	bridge.PdkBridge
 }

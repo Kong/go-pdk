@@ -1,4 +1,6 @@
 /*
+Client request module.
+
 A set of functions to retrieve information about the incoming requests made by clients.
 */
 package request

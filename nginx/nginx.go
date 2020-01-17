@@ -7,6 +7,7 @@ import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+// Holds this module's functions.  Accessible as `kong.Nginx`
 type Nginx struct {
 	bridge.PdkBridge
 }

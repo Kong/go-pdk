@@ -59,11 +59,11 @@ func (r Request) SetMethod(method string) error {
 //
 // Unlike kong.ServiceRequest.SetRawQuery(), the query argument must be a map
 // in which each key is a string (corresponding to an arguments name), and each
-// value is either a boolean, a string or an array of strings or booleans.
-// Additionally, all string values will be URL-encoded.
+// value is either an array of strings or booleans.  Additionally, all string
+// values will be URL-encoded.
 //
 // The resulting querystring will contain keys in their lexicographical order.
-// The order of entries within the same key (when values are given as an array) is retained.
+// The order of entries within the same key is retained.
 //
 // If further control of the querystring generation is needed, a raw querystring
 // can be given as a string with kong.ServiceRequest.SetRawQuery().
@@ -103,10 +103,10 @@ func (r Request) ClearHeader(name string) error {
 // kong.ServiceRequest.SetHeaders() sets the headers of the request
 // to the Service. Unlike kong.ServiceRequest.SetHeader(), the headers argument
 // must be a map in which each key is a string (corresponding to a header’s name),
-// and each value is a string, or an array of strings.
+// and each value an array of strings.
 //
 // The resulting headers are produced in lexicographical order.
-// The order of entries with the same name (when values are given as an array) is retained.
+// The order of entries with the same name is retained.
 //
 // This function overrides any existing header bearing the same name as those
 // specified in the headers argument. Other headers remain unchanged.
