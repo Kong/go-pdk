@@ -1,13 +1,26 @@
+/*
+Client response module.
+
+The downstream response module contains a set of functions for producing
+and manipulating responses sent back to the client (“downstream”).
+Responses can be produced by Kong (e.g. an authentication plugin rejecting
+a request), or proxied back from an Service’s response body.
+
+Unlike kong.ServiceResponse, this module allows mutating the response
+before sending it back to the client.
+*/
 package response
 
 import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+// Holds this module's functions.  Accessible as `kong.Response`
 type Response struct {
 	bridge.PdkBridge
 }
 
+// Called by the plugin server at initialization.
 func New(ch chan interface{}) Response {
 	return Response{bridge.New(ch)}
 }
@@ -72,6 +85,23 @@ func (r Response) GetHeaders(max_headers int) (res map[string]interface{}, err e
 	return r.AskMap(`kong.response.get_headers`, max_headers)
 }
 
+// kong.Response.GetSource() helps determining where the current response
+// originated from. Kong being a reverse proxy, it can short-circuit
+// a request and produce a response of its own, or the response can
+// come from the proxied Service.
+//
+// Returns a string with three possible values:
+//
+// - “exit” is returned when, at some point during the processing of the request,
+// there has been a call to kong.response.exit(). In other words, when the request
+// was short-circuited by a plugin or by Kong itself (e.g. invalid credentials).
+//
+// - “error” is returned when an error has happened while processing the request
+// - for example, a timeout while connecting to the upstream service.
+//
+// - “service” is returned when the response was originated by
+// successfully contacting the proxied Service.
+//
 func (r Response) GetSource() (string, error) {
 	return r.AskString(`kong.response.get_source`)
 }

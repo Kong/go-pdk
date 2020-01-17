@@ -11,6 +11,7 @@ type Nginx struct {
 	bridge.PdkBridge
 }
 
+// Called by the plugin server at initialization.
 func New(ch chan interface{}) Nginx {
 	return Nginx{bridge.New(ch)}
 }
