@@ -24,9 +24,6 @@ func (b PdkBridge) Ask(method string, args ...interface{}) (interface{}, error) 
 	b.ch <- StepData{ method, args }
 
 	reply := <-b.ch
-	if reply == "null" {
-		return nil, errors.New("null response")
-	}
 
 	err, ok := reply.(error)
 	if ok {
@@ -39,6 +36,10 @@ func (b PdkBridge) Ask(method string, args ...interface{}) (interface{}, error) 
 func (b PdkBridge) AskInt(method string, args ...interface{}) (i int, err error) {
 	val, err := b.Ask(method, args...)
 	if err != nil {
+		return
+	}
+	if val == nil {
+		err = errors.New("null response")
 		return
 	}
 
@@ -72,6 +73,10 @@ func (b PdkBridge) AskInt(method string, args ...interface{}) (i int, err error)
 func (b PdkBridge) AskFloat(method string, args ...interface{}) (f float64, err error) {
 	val, err := b.Ask(method, args...)
 	if err != nil {
+		return
+	}
+	if val == nil {
+		err = errors.New("null response")
 		return
 	}
 
@@ -111,6 +116,10 @@ func (b PdkBridge) AskString(method string, args ...interface{}) (s string, err 
 	if err != nil {
 		return
 	}
+	if val == nil {
+		err = errors.New("null response")
+		return
+	}
 
 	var ok bool
 	if s, ok = val.(string); !ok {
@@ -119,15 +128,15 @@ func (b PdkBridge) AskString(method string, args ...interface{}) (s string, err 
 	return
 }
 
-func (b PdkBridge) AskMap(method string, args ...interface{}) (m map[string]interface{}, err error) {
+func (b PdkBridge) AskMap(method string, args ...interface{}) (m map[string][]string, err error) {
 	val, err := b.Ask(method, args...)
 	if err != nil {
 		return
 	}
 
 	var ok bool
-	if m, ok = val.(map[string]interface{}); !ok {
-		err = ReturnTypeError("map[string]interface{}")
+	if m, ok = val.(map[string][]string); !ok {
+		err = ReturnTypeError("map[string][]string")
 	}
 	return
 }

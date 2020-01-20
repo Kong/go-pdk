@@ -67,7 +67,7 @@ func (r Request) SetMethod(method string) error {
 //
 // If further control of the querystring generation is needed, a raw querystring
 // can be given as a string with kong.ServiceRequest.SetRawQuery().
-func (r Request) SetQuery(query map[string]interface{}) error {
+func (r Request) SetQuery(query map[string][]string) error {
 	_, err := r.Ask(`kong.service.request.set_query`, query)
 	return err
 }
@@ -113,7 +113,7 @@ func (r Request) ClearHeader(name string) error {
 //
 // If the "Host" header is set (case-insensitive), then this is will also set
 // the SNI of the request to the Service.
-func (r Request) SetHeaders(headers map[string]interface{}) error {
+func (r Request) SetHeaders(headers map[string][]string) error {
 	_, err := r.Ask(`kong.service.request.set_headers`, headers)
 	return err
 }

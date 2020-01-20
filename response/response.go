@@ -77,7 +77,7 @@ func (r Response) GetHeader(name string) (string, error) {
 // The max_args argument specifies the maximum number of returned headers.
 // Must be greater than 1 and not greater than 1000, or -1 to specify the
 // default limit of 100 arguments.
-func (r Response) GetHeaders(max_headers int) (res map[string]interface{}, err error) {
+func (r Response) GetHeaders(max_headers int) (res map[string][]string, err error) {
 	if max_headers == -1 {
 		return r.AskMap(`kong.response.get_headers`)
 	}
@@ -153,7 +153,8 @@ func (r Response) ClearHeader(k string) error {
 // kong.Response.SetHeaders() sets the headers for the response.
 // Unlike kong.Response.SetHeader(), the headers argument must be a map
 // in which each key is a string (corresponding to a header’s name),
-// and each value is a string, or an array of strings.
+// and each value is an array of strings.  To clear a previously
+// set header, you can set it's value to an empty array.
 //
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
@@ -164,7 +165,7 @@ func (r Response) ClearHeader(k string) error {
 //
 // This function overrides any existing header bearing the same name
 // as those specified in the headers argument. Other headers remain unchanged.
-func (r Response) SetHeaders(headers map[string]interface{}) error {
+func (r Response) SetHeaders(headers map[string][]string) error {
 	_, err := r.Ask(`kong.response.set_headers`, headers)
 	return err
 }
