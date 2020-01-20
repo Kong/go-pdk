@@ -7,9 +7,10 @@ connecting to Kong in the context of a given request.
 package client
 
 import (
+	"fmt"
+
 	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/entities"
-	"fmt"
 )
 
 // Holds this module's functions.  Accessible as `kong.Client`

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var ch chan interface {}
+var ch chan interface{}
 var bridge PdkBridge
 
 func init() {
@@ -25,7 +25,7 @@ func TestAsk(t *testing.T) {
 
 	assert.Equal(t, call, StepData{
 		Method: "foo.bar",
-		Args: []interface{} {1, 2, 3, 1.23, false},
+		Args:   []interface{}{1, 2, 3, 1.23, false},
 	})
 
 	go func() {
@@ -37,9 +37,9 @@ func TestAsk(t *testing.T) {
 	ch <- ""
 
 	n := "gs"
-	consumer := []interface{} {entities.Consumer{Username: n}}
+	consumer := []interface{}{entities.Consumer{Username: n}}
 	assert.Equal(t, StepData{
 		Method: "foo.bar",
-		Args: consumer,
+		Args:   consumer,
 	}, call)
 }

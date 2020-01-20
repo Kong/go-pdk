@@ -24,9 +24,9 @@ func getBack(f func()) interface{} {
 }
 
 func TestGetId(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.node.get_id"}, getBack(func() { node.GetId() }))
+	assert.Equal(t, bridge.StepData{Method: "kong.node.get_id"}, getBack(func() { node.GetId() }))
 }
 
 func TestGetMemoryStats(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.node.get_memory_stats"}, getBack(func() { node.GetMemoryStats() }))
+	assert.Equal(t, bridge.StepData{Method: "kong.node.get_memory_stats"}, getBack(func() { node.GetMemoryStats() }))
 }

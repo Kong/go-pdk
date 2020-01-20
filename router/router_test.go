@@ -2,6 +2,7 @@ package router
 
 import (
 	"testing"
+
 	"github.com/Kong/go-pdk/bridge"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,9 +24,9 @@ func getBack(f func()) interface{} {
 }
 
 func TestGetRoute(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.router.get_route"}, getBack(func() { router.GetRoute() }))
+	assert.Equal(t, bridge.StepData{Method: "kong.router.get_route"}, getBack(func() { router.GetRoute() }))
 }
 
 func TestGetService(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.router.get_service"}, getBack(func() { router.GetService() }))
+	assert.Equal(t, bridge.StepData{Method: "kong.router.get_service"}, getBack(func() { router.GetService() }))
 }

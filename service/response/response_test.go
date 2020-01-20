@@ -2,6 +2,7 @@ package response
 
 import (
 	"testing"
+
 	"github.com/Kong/go-pdk/bridge"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,13 +24,13 @@ func getBack(f func()) interface{} {
 }
 
 func TestGetStatus(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.service.response.get_status"}, getBack(func() { response.GetStatus() }))
+	assert.Equal(t, bridge.StepData{Method: "kong.service.response.get_status"}, getBack(func() { response.GetStatus() }))
 }
 
 func TestGetHeader(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.service.response.get_header", Args:[]interface{}{"foo"}}, getBack(func() { response.GetHeader("foo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.service.response.get_header", Args: []interface{}{"foo"}}, getBack(func() { response.GetHeader("foo") }))
 }
 
 func TestGetHeaders(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.service.response.get_headers", Args:[]interface{}{1}}, getBack(func() { response.GetHeaders(1) }))
+	assert.Equal(t, bridge.StepData{Method: "kong.service.response.get_headers", Args: []interface{}{1}}, getBack(func() { response.GetHeaders(1) }))
 }

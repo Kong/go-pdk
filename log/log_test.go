@@ -32,33 +32,33 @@ func getStrValue(f func(res chan string), val string) string {
 }
 
 func TestAlert(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.log.alert", Args:[]interface{}{"Alo"}}, getBack(func() { log.Alert("Alo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.log.alert", Args: []interface{}{"Alo"}}, getBack(func() { log.Alert("Alo") }))
 }
 
 func TestCrit(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.log.crit", Args:[]interface{}{"Alo"}}, getBack(func() { log.Crit("Alo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.log.crit", Args: []interface{}{"Alo"}}, getBack(func() { log.Crit("Alo") }))
 }
 
 func TestErr(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.log.err", Args:[]interface{}{"Alo"}}, getBack(func() { log.Err("Alo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.log.err", Args: []interface{}{"Alo"}}, getBack(func() { log.Err("Alo") }))
 }
 
 func TestWarn(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.log.warn", Args:[]interface{}{"Alo"}}, getBack(func() { log.Warn("Alo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.log.warn", Args: []interface{}{"Alo"}}, getBack(func() { log.Warn("Alo") }))
 }
 
 func TestNotice(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.log.notice", Args:[]interface{}{"Alo"}}, getBack(func() { log.Notice("Alo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.log.notice", Args: []interface{}{"Alo"}}, getBack(func() { log.Notice("Alo") }))
 }
 
 func TestInfo(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.log.info", Args:[]interface{}{"Alo"}}, getBack(func() { log.Info("Alo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.log.info", Args: []interface{}{"Alo"}}, getBack(func() { log.Info("Alo") }))
 }
 
 func TestDebug(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.log.debug", Args:[]interface{}{"Alo"}}, getBack(func() { log.Debug("Alo") }))
+	assert.Equal(t, bridge.StepData{Method: "kong.log.debug", Args: []interface{}{"Alo"}}, getBack(func() { log.Debug("Alo") }))
 }
 
 func TestSerialize(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method:"kong.log.serialize"}, getBack(func() { log.Serialize() }))
+	assert.Equal(t, bridge.StepData{Method: "kong.log.serialize"}, getBack(func() { log.Serialize() }))
 }
