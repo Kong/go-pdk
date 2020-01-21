@@ -52,3 +52,24 @@ func (n Node) GetMemoryStats() (ms MemoryStats, err error) {
 	}
 	return
 }
+
+// kong.Node.SetCtxShared() sets a value in the `kong.ctx.shared` request context table.
+func (n Node) SetCtxShared(k string, value interface{}) error {
+	_, err := n.Ask(`kong.set_ctx_shared`, k, value)
+	return err
+}
+
+// kong.Node.GetCtxSharedAny() returns a value from the `kong.ctx.shared` request context table.
+func (n Node) GetCtxSharedAny(k string) (interface{}, error) {
+	return n.Ask(`kong.get_ctx_shared`, k)
+}
+
+// kong.Node.GetCtxSharedString() returns a string value from the `kong.ctx.shared` request context table.
+func (n Node) GetCtxSharedString(k string) (string, error) {
+	return n.AskString(`kong.get_ctx_shared`, k)
+}
+
+// kong.Node.GetCtxSharedFloat() returns a float value from the `kong.ctx.shared` request context table.
+func (n Node) GetCtxSharedFloat(k string) (float64, error) {
+	return n.AskFloat(`kong.get_ctx_shared`, k)
+}
