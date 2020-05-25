@@ -17,6 +17,7 @@ package pdk
 
 import (
 	"github.com/Kong/go-pdk/client"
+	"github.com/Kong/go-pdk/ctx"
 	"github.com/Kong/go-pdk/ip"
 	"github.com/Kong/go-pdk/log"
 	"github.com/Kong/go-pdk/nginx"
@@ -32,6 +33,7 @@ import (
 // PDK go pdk module
 type PDK struct {
 	Client          client.Client
+	Ctx             ctx.Ctx
 	Log             log.Log
 	Nginx           nginx.Nginx
 	Request         request.Request
@@ -48,6 +50,7 @@ type PDK struct {
 func Init(ch chan interface{}) *PDK {
 	return &PDK{
 		Client:          client.New(ch),
+		Ctx:             ctx.New(ch),
 		Log:             log.New(ch),
 		Nginx:           nginx.New(ch),
 		Request:         request.New(ch),
