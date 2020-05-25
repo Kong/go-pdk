@@ -15,13 +15,6 @@ func init() {
 	nginx = New(ch)
 }
 
-func getName(f func()) interface{} {
-	go f()
-	name := <-ch
-	ch <- ""
-	return name
-}
-
 func getBack(f func()) interface{} {
 	go f()
 	d := <-ch
@@ -36,6 +29,10 @@ func TestGetVar(t *testing.T) {
 
 func TestGetTLS1VersionStr(t *testing.T) {
 	assert.Equal(t, bridge.StepData{Method: "kong.nginx.get_tls1_version_str"}, getBack(func() { nginx.GetTLS1VersionStr() }))
+}
+
+func TestSetCtx(t *testing.T) {
+	assert.Equal(t, bridge.StepData{Method: "kong.nginx.set_ctx", Args: []interface{}{"key", 123}}, getBack(func() { nginx.SetCtx("key", 123) }))
 }
 
 func TestGetCtxAny(t *testing.T) {
