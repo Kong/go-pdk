@@ -34,3 +34,7 @@ func TestGetHeader(t *testing.T) {
 func TestGetHeaders(t *testing.T) {
 	assert.Equal(t, bridge.StepData{Method: "kong.service.response.get_headers", Args: []interface{}{1}}, getBack(func() { response.GetHeaders(1) }))
 }
+
+func TestGetRawBody(t *testing.T) {
+	assert.Equal(t, bridge.StepData{Method: "kong.service.response.get_raw_body"}, getBack(func() { response.GetRawBody() }))
+}

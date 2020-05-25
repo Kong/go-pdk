@@ -56,3 +56,9 @@ func (r Response) GetHeaders(max_headers int) (map[string][]string, error) {
 func (r Response) GetHeader(name string) (string, error) {
 	return r.AskString(`kong.service.response.get_header`, name)
 }
+
+// kong.ServiceResponse.GetRawBody() returns the raw body
+// of the response from the Service.
+func (r Response) GetRawBody() (string, error) {
+  return r.AskString(`kong.service.response.get_raw_body`)
+}
