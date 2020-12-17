@@ -1,7 +1,8 @@
-package pdk
+package server
 
 import (
 	"fmt"
+	"github.com/Kong/go-pdk"
 	"time"
 )
 
@@ -17,7 +18,7 @@ type eventData struct {
 	id       int              // event id
 	instance *instanceData    // plugin instance
 	ipc      chan interface{} // communication channel (TODO: use decoded structs)
-	pdk      *PDK             // go-pdk instance
+	pdk      *pdk.PDK         // go-pdk instance
 }
 
 func (rh *rpcHandler) addEvent(event *eventData) {
@@ -53,7 +54,7 @@ func (rh *rpcHandler) HandleEvent(in StartEventData, out *StepData) error {
 	event := eventData{
 		instance: instance,
 		ipc:      ipc,
-		pdk:      Init(ipc),
+		pdk:      pdk.Init(ipc),
 	}
 
 	rh.addEvent(&event)

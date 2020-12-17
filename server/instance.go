@@ -1,8 +1,9 @@
-package pdk
+package server
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Kong/go-pdk"
 	"log"
 	"time"
 )
@@ -11,7 +12,7 @@ type instanceData struct {
 	id            int
 	startTime     time.Time
 	config        interface{}
-	handlers      map[string]func(*PDK)
+	handlers      map[string]func(*pdk.PDK)
 	lastEventTime time.Time
 }
 
@@ -22,16 +23,16 @@ type PluginConfig struct {
 }
 
 type (
-	certificater interface{ Certificate(*PDK) }
-	rewriter     interface{ Rewrite(*PDK) }
-	accesser     interface{ Access(*PDK) }
-	responser    interface{ Response(*PDK) }
-	prereader    interface{ Preread(*PDK) }
-	logger       interface{ Log(*PDK) }
+	certificater interface{ Certificate(*pdk.PDK) }
+	rewriter     interface{ Rewrite(*pdk.PDK) }
+	accesser     interface{ Access(*pdk.PDK) }
+	responser    interface{ Response(*pdk.PDK) }
+	prereader    interface{ Preread(*pdk.PDK) }
+	logger       interface{ Log(*pdk.PDK) }
 )
 
-func getHandlers(config interface{}) map[string]func(*PDK) {
-	handlers := map[string]func(*PDK){}
+func getHandlers(config interface{}) map[string]func(*pdk.PDK) {
+	handlers := map[string]func(*pdk.PDK){}
 
 	if h, ok := config.(certificater); ok { handlers["certificate"] = h.Certificate }
 	if h, ok := config.(rewriter)    ; ok { handlers["rewrite"]     = h.Rewrite     }

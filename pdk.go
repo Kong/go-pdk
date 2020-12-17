@@ -63,7 +63,3 @@ func Init(ch chan interface{}) *PDK {
 		ServiceResponse: service_response.New(ch),
 	}
 }
-
-func Serve(constructor func() interface{}) {
-	startServer(constructor)
-}

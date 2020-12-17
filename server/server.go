@@ -1,4 +1,4 @@
-package pdk
+package server
 
 import (
 	"flag"
@@ -91,7 +91,7 @@ func dumpInfo(rh rpcHandler) {
 	}
 }
 
-func startServer(constructor func() interface{}) error {
+func StartServer(constructor func() interface{}) error {
 	rh := newRpcHandler(constructor)
 
 	if *dump {

@@ -1,4 +1,4 @@
-package pdk
+package server
 
 import (
 	"log"
