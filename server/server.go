@@ -12,8 +12,20 @@ import (
 )
 
 var (
-	dump = flag.Bool("dump-all-plugin", false, "Dump info about plugins")
+	kongPrefix     = flag.String("kong-prefix", "/usr/local/kong", "Kong prefix path (specified by the -p argument commonly used in the kong cli)")
+	dump = flag.Bool("dump", false, "Dump info about plugins")
+	help = flag.Bool("help", false, "Show usage info")
 )
+
+func init() {
+	flag.Parse()
+
+	if *help {
+		flag.Usage()
+		os.Exit(2)
+	}
+}
+
 
 func getName() (name string, err error) {
 	execPath, err := os.Executable()
