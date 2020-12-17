@@ -65,6 +65,8 @@ func newRpcHandler(constructor func() interface{}, version string, priority int)
 		configType:  reflect.TypeOf(constructor()),
 		version: version,
 		priority: priority,
+		instances: map[int]*instanceData{},
+		events:    map[int]*eventData{},
 	}
 }
 
