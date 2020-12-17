@@ -61,7 +61,7 @@ func newRpcHandler(constructor func() interface{}) *rpcHandler {
 
 	return &rpcHandler{
 		constructor: constructor,
-		configType:  constructorType.Out(0),
+		configType:  reflect.TypeOf(constructor()),
 	}
 }
 
@@ -86,6 +86,9 @@ func getSchemaDict(t reflect.Type) schemaDict {
 
 	case reflect.Float32, reflect.Float64:
 		return schemaDict{"type": "number"}
+
+	case reflect.Ptr:
+		return getSchemaDict(t.Elem())
 
 	case reflect.Slice:
 		elemType := getSchemaDict(t.Elem())
