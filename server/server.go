@@ -37,17 +37,18 @@ func getName() (name string, err error) {
 	return
 }
 
-func getSocketPath() (string, error) {
+func getSocketPath() (pth string, err error) {
 	name, err := getName()
 	if err != nil {
-		return "", err
+		return
 	}
 
-	return name + ".socket", nil
+	pth = path.Join(*kongPrefix, name + ".socket")
+	return
 }
 
 func openSocket() (listener net.Listener, err error) {
-	path, err := getName()
+	path, err := getSocketPath()
 	if err != nil {
 		return
 	}
@@ -64,6 +65,7 @@ func openSocket() (listener net.Listener, err error) {
 		return
 	}
 
+	log.Printf("Listening on socket: %s", path)
 	return
 }
 
@@ -97,14 +99,14 @@ func dumpInfo(rh rpcHandler) {
 
 	var handle codec.JsonHandle
 	enc := codec.NewEncoder(os.Stdout, &handle)
-	err = enc.Encode(info)
+	err = enc.Encode([1]pluginInfo{ info })
 	if err != nil {
 		log.Printf("encoding plugin info: %s", err)
 	}
 }
 
-func StartServer(constructor func() interface{}) error {
-	rh := newRpcHandler(constructor)
+func StartServer(constructor func() interface{}, version string, priority int) error {
+	rh := newRpcHandler(constructor, version, priority)
 
 	if *dump {
 		dumpInfo(*rh)

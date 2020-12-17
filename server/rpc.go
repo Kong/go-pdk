@@ -11,7 +11,8 @@ import (
 type rpcHandler struct {
 	constructor func() interface{}
 	configType  reflect.Type
-
+	version  string     // version number
+	priority int        // priority info
 	lock              sync.RWMutex
 	instances         map[int]*instanceData
 	nextInstanceId    int
@@ -41,7 +42,7 @@ func getHandlerNames(t reflect.Type) []string {
 	return handlers
 }
 
-func newRpcHandler(constructor func() interface{}) *rpcHandler {
+func newRpcHandler(constructor func() interface{}, version string, priority int) *rpcHandler {
 
 	constructorType := reflect.TypeOf(constructor)
 	if constructorType == nil {
@@ -62,6 +63,8 @@ func newRpcHandler(constructor func() interface{}) *rpcHandler {
 	return &rpcHandler{
 		constructor: constructor,
 		configType:  reflect.TypeOf(constructor()),
+		version: version,
+		priority: priority,
 	}
 }
 
@@ -161,6 +164,8 @@ func (rh rpcHandler) getInfo() (info pluginInfo, err error) {
 				schemaDict{"config": getSchemaDict(rh.configType)},
 			},
 		},
+		Version: rh.version,
+		Priority: rh.priority,
 	}
 
 	return
