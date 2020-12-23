@@ -61,7 +61,7 @@ type InstanceStatus struct {
 	StartTime int64
 }
 
-// StartInstance starts a plugin instance, as requred by configuration data.  More than
+// StartInstance starts a plugin instance, as required by configuration data.  More than
 // one instance can be started for a single plugin.  If the configuration changes,
 // a new instance should be started and the old one closed.
 //
