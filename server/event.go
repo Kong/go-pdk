@@ -87,7 +87,7 @@ type StepData struct {
 	Data    interface{} // carried data
 }
 
-// Step carries a callback's anser back from Kong to the plugin,
+// Step carries a callback's answer back from Kong to the plugin,
 // the return value is either a new callback request or a finish signal.
 //
 // RPC exported method
