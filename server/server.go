@@ -1,3 +1,14 @@
+/*
+Package Kong/go-pdk/server implements an embedded plugin server.
+
+To use, add a main() function:
+
+    func main () {
+      server.StartServer(New, Version, Priority)
+    }
+
+and compile as an executable with the standard `go build` command.
+*/
 package server
 
 import (
@@ -105,6 +116,9 @@ func dumpInfo(rh rpcHandler) {
 	}
 }
 
+// Start the embedded plugin server
+// Handles CLI flags, and returns immediately if appropriate.
+// Otherwise, returns only if the server is stopped.
 func StartServer(constructor func() interface{}, version string, priority int) error {
 	rh := newRpcHandler(constructor, version, priority)
 
