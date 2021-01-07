@@ -132,7 +132,11 @@ func StartServer(constructor func() interface{}, version string, priority int) e
 		return err
 	}
 
-	rpc.RegisterName("plugin", rh)
+	err = rpc.RegisterName("plugin", rh)
+	if err != nil {
+		return err
+	}
+
 	runServer(listener)
 
 	return nil
