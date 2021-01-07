@@ -163,7 +163,7 @@ func (rh rpcHandler) getInfo() (info pluginInfo, err error) {
 		Schema: schemaDict{
 			"name": name,
 			"fields": []schemaDict{
-				schemaDict{"config": getSchemaDict(rh.configType)},
+				{"config": getSchemaDict(rh.configType)},
 			},
 		},
 		Version: rh.version,

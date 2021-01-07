@@ -114,6 +114,7 @@ func dumpInfo(rh rpcHandler) {
 	if err != nil {
 		log.Printf("encoding plugin info: %s", err)
 	}
+	os.Stdout.WriteString("\n")
 }
 
 // Start the embedded plugin server
