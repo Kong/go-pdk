@@ -41,7 +41,7 @@ func (rh *rpcHandler) HandleEvent(in StartEventData, out *StepData) error {
 	instance, ok := rh.instances[in.InstanceId]
 	rh.lock.RUnlock()
 	if !ok {
-		return fmt.Errorf("No plugin instance %d", in.InstanceId)
+		return fmt.Errorf("no plugin instance %d", in.InstanceId)
 	}
 
 	h, ok := instance.handlers[in.EventName]
@@ -96,7 +96,7 @@ func (rh *rpcHandler) Step(in StepData, out *StepData) error {
 	event, ok := rh.events[in.EventId]
 	rh.lock.RUnlock()
 	if !ok {
-		return fmt.Errorf("No running event %d", in.EventId)
+		return fmt.Errorf("no running event %d", in.EventId)
 	}
 
 	event.ipc <- in.Data

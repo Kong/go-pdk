@@ -72,7 +72,7 @@ func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus)
 	instanceConfig := rh.constructor()
 
 	if err := json.Unmarshal(config.Config, instanceConfig); err != nil {
-		return fmt.Errorf("Decoding config: %w", err)
+		return fmt.Errorf("decoding config: %w", err)
 	}
 
 	instance := instanceData{
@@ -103,7 +103,7 @@ func (rh *rpcHandler) InstanceStatus(id int, status *InstanceStatus) error {
 	instance, ok := rh.instances[id]
 	rh.lock.RUnlock()
 	if !ok {
-		return fmt.Errorf("No plugin instance %d", id)
+		return fmt.Errorf("no plugin instance %d", id)
 	}
 
 	*status = InstanceStatus{
@@ -128,7 +128,7 @@ func (rh *rpcHandler) CloseInstance(id int, status *InstanceStatus) error {
 	instance, ok := rh.instances[id]
 	rh.lock.RUnlock()
 	if !ok {
-		return fmt.Errorf("No plugin instance %d", id)
+		return fmt.Errorf("no plugin instance %d", id)
 	}
 
 	*status = InstanceStatus{
