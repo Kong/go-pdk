@@ -59,24 +59,24 @@ func getSocketPath() (pth string, err error) {
 }
 
 func openSocket() (listener net.Listener, err error) {
-	path, err := getSocketPath()
+	socketPath, err := getSocketPath()
 	if err != nil {
 		return
 	}
 
-	err = os.Remove(path)
+	err = os.Remove(socketPath)
 	if err != nil && !os.IsNotExist(err) {
-		log.Printf(`removing "%s": %s`, path, err)
+		log.Printf(`removing "%s": %s`, socketPath, err)
 		return
 	}
 
-	listener, err = net.Listen("unix", path)
+	listener, err = net.Listen("unix", socketPath)
 	if err != nil {
-		log.Printf(`listen("%s"): %s`, path, err)
+		log.Printf(`listen("%s"): %s`, socketPath, err)
 		return
 	}
 
-	log.Printf("Listening on socket: %s", path)
+	log.Printf("Listening on socket: %s", socketPath)
 	return
 }
 
