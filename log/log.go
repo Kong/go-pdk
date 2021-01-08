@@ -52,6 +52,28 @@ func (r Log) Debug(args ...interface{}) error {
 	return err
 }
 
+var (
+	modeSet = map[string]string{ "mode": "set" }
+	modeAdd = map[string]string{ "mode": "add" }
+	modeReplace = map[string]string{ "mode": "replace" }
+)
+
+func (r Log) SetSerializeValue(key string, v interface{}) error {
+	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeSet)
+	return err
+}
+
+func (r Log) SetSerializeValueAdd(key string, v interface{}) error {
+	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeAdd)
+	return err
+}
+
+func (r Log) SetSerializeValueReplace(key string, v interface{}) error {
+	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeReplace)
+	return err
+}
+
+
 func (r Log) Serialize() (s string, err error) {
 	return r.AskString(`kong.log.serialize`)
 }
