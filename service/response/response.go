@@ -7,6 +7,13 @@ import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+type ResponseIface interface {
+	GetStatus() (i int, err error)
+	GetHeaders(max_headers int) (map[string][]string, error)
+	GetHeader(name string) (string, error)
+	GetRawBody() (string, error)
+}
+
 // Holds this module's functions.  Accessible as `kong.ServiceResponse`
 type Response struct {
 	bridge.PdkBridge

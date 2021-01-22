@@ -7,6 +7,19 @@ import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+type RequestIface interface {
+	SetScheme(scheme string) error
+	SetPath(path string) error
+	SetRawQuery(query string) error
+	SetMethod(method string) error
+	SetQuery(query map[string][]string) error
+	SetHeader(name string, value string) error
+	AddHeader(name string, value string) error
+	ClearHeader(name string) error
+	SetHeaders(headers map[string][]string) error
+	SetRawBody(body string) error
+}
+
 // Holds this module's functions.  Accessible as `kong.ServiceRequest`
 type Request struct {
 	bridge.PdkBridge

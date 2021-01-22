@@ -12,6 +12,11 @@ import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+type ServiceIface interface {
+	SetUpstream(host string) error
+	SetTarget(host string, port int) error
+}
+
 // Holds this module's functions.  Accessible as `kong.Service`
 type Service struct {
 	bridge.PdkBridge

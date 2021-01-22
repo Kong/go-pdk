@@ -7,6 +7,20 @@ import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+type LogIface interface {
+	Alert(args ...interface{}) error
+	Crit(args ...interface{}) error
+	Err(args ...interface{}) error
+	Warn(args ...interface{}) error
+	Notice(args ...interface{}) error
+	Info(args ...interface{}) error
+	Debug(args ...interface{}) error
+	SetSerializeValue(key string, v interface{}) error
+	SetSerializeValueAdd(key string, v interface{}) error
+	SetSerializeValueReplace(key string, v interface{}) error
+	Serialize() (s string, err error)
+}
+
 // Holds this module's functions.  Accessible as `kong.Log`
 type Log struct {
 	bridge.PdkBridge
