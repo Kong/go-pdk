@@ -32,18 +32,18 @@ import (
 
 // PDK go pdk module
 type PDK struct {
-	Client          client.Client
-	Ctx             ctx.Ctx
-	Log             log.Log
-	Nginx           nginx.Nginx
-	Request         request.Request
-	Response        response.Response
-	Router          router.Router
-	IP              ip.Ip
-	Node            node.Node
-	Service         service.Service
-	ServiceRequest  service_request.Request
-	ServiceResponse service_response.Response
+	Client          client.ClientInterface
+	Ctx             ctx.CtxIface
+	Log             log.LogIface
+	Nginx           nginx.NginxIface
+	Request         request.RequestIface
+	Response        response.ResponseIface
+	Router          router.RouterIface
+	IP              ip.IpIface
+	Node            node.NodeIface
+	Service         service.ServiceIface
+	ServiceRequest  service_request.RequestIface
+	ServiceResponse service_response.ResponseIface
 }
 
 // Init initialize go pdk.  Called by the pluginserver at initialization.

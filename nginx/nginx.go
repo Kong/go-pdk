@@ -7,6 +7,18 @@ import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+type NginxIface interface {
+	GetVar(k string) (string, error)
+	GetTLS1VersionStr() (string, error)
+	SetCtx(k string, v interface{}) error
+	GetCtxAny(k string) (interface{}, error)
+	GetCtxString(k string) (string, error)
+	GetCtxFloat(k string) (float64, error)
+	GetCtxInt(k string) (int, error)
+	ReqStartTime() (float64, error)
+	GetSubsystem() (string, error)
+}
+
 // Holds this module's functions.  Accessible as `kong.Nginx`
 type Nginx struct {
 	bridge.PdkBridge

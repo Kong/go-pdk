@@ -7,6 +7,11 @@ import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+type NodeIface interface {
+	GetId() (string, error)
+	GetMemoryStats() (ms MemoryStats, err error)
+}
+
 // Holds this module's functions.  Accessible as `kong.Node`
 type Node struct {
 	bridge.PdkBridge

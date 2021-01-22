@@ -17,6 +17,10 @@ import (
 	// 	"strconv"
 )
 
+type IpIface interface {
+	IsTrusted(address string) (is_trusted bool, err error)
+}
+
 // Holds this module's functions.  Accessible as `kong.Ip`
 type Ip struct {
 	bridge.PdkBridge

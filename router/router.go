@@ -10,6 +10,11 @@ import (
 	"github.com/Kong/go-pdk/entities"
 )
 
+type RouterIface interface {
+	GetRoute() (route entities.Route, err error)
+	GetService() (service entities.Service, err error)
+}
+
 // Holds this module's functions.  Accessible as `kong.Router`
 type Router struct {
 	bridge.PdkBridge

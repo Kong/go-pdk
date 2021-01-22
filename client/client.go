@@ -13,6 +13,18 @@ import (
 	"github.com/Kong/go-pdk/entities"
 )
 
+type ClientInterface interface {
+	GetIp() (ip string, err error)
+	GetForwardedIp() (string, error)
+	GetPort() (string, error)
+	GetForwardedPort() (string, error)
+	GetCredential() (cred AuthenticatedCredential, err error)
+	LoadConsumer(consumer_id string, by_username bool) (consumer entities.Consumer, err error)
+	GetConsumer() (consumer entities.Consumer, err error)
+	Authenticate(consumer *entities.Consumer, credential *AuthenticatedCredential) error
+	GetProtocol(allow_terminated bool) (string, error)
+}
+
 // Holds this module's functions.  Accessible as `kong.Client`.
 type Client struct {
 	bridge.PdkBridge

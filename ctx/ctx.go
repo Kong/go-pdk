@@ -34,6 +34,14 @@ import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+type CtxIface interface {
+	SetShared(k string, value interface{}) error
+	GetSharedAny(k string) (interface{}, error)
+	GetSharedString(k string) (string, error)
+	GetSharedFloat(k string) (float64, error)
+	GetSharedInt(k string) (int, error)
+}
+
 // Holds this module's functions.  Accessible as `kong.Ctx`
 type Ctx struct {
 	bridge.PdkBridge

@@ -9,6 +9,26 @@ import (
 	"github.com/Kong/go-pdk/bridge"
 )
 
+// Request interface to allow for east mocking of the pdk.PDK
+type RequestIface interface {
+	GetScheme() (s string, err error)
+	GetHost() (host string, err error)
+	GetPort() (int, error)
+	GetForwardedScheme() (s string, err error)
+	GetForwardedHost() (host string, err error)
+	GetForwardedPort() (int, error)
+	GetHttpVersion() (version float64, err error)
+	GetMethod() (m string, err error)
+	GetPath() (string, error)
+	GetPathWithQuery() (string, error)
+	GetRawQuery() (string, error)
+	GetQueryArg(k string) (string, error)
+	GetQuery(max_args int) (map[string][]string, error)
+	GetHeader(k string) (string, error)
+	GetHeaders(max_headers int) (map[string][]string, error)
+	GetRawBody() (string, error)
+}
+
 // Holds this module's functions.  Accessible as `kong.Request`
 type Request struct {
 	bridge.PdkBridge
