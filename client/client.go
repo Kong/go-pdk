@@ -7,7 +7,7 @@ connecting to Kong in the context of a given request.
 package client
 
 import (
-	"fmt"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 
 	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/entities"
@@ -32,21 +32,16 @@ type AuthenticatedCredential struct {
 }
 
 // Called by the plugin server at initialization.
-func New(ch chan interface{}) Client {
-	return Client{bridge.New(ch)}
-}
+// func New(conn io.ReaderWriter) Client {
+// 	return Client{bridge.New(conn)}
+// }
 
 // kong.Client.GetIp() returns the remote address of the client making the request.
 // This will always return the address of the client directly connecting to Kong.
 // That is, in cases when a load balancer is in front of Kong, this function will
 // return the load balancer’s address, and not that of the downstream client.
 func (c Client) GetIp() (ip string, err error) {
-	ip_v, err := c.Ask(`kong.client.get_ip`)
-	var ok bool
-	if ip, ok = ip_v.(string); !ok {
-		err = bridge.ReturnTypeError("string")
-	}
-	return
+	return c.AskString(`kong.client.get_ip`, nil)
 }
 
 // kong.Client.GetForwardedIp() returns the remote address of the client making the request.
@@ -58,7 +53,7 @@ func (c Client) GetIp() (ip string, err error) {
 //   - real_ip_header
 //   - real_ip_recursive
 func (c Client) GetForwardedIp() (string, error) {
-	return c.AskString(`kong.client.get_forwarded_ip`)
+	return c.AskString(`kong.client.get_forwarded_ip`, nil)
 }
 
 // kong.Client.GetPort() returns the remote port of the client making the request.
@@ -84,16 +79,15 @@ func (c Client) GetForwardedPort() (int, error) {
 // kong.Client.GetCredential() returns the credentials of the currently authenticated consumer.
 // If not set yet, it returns nil.
 func (c Client) GetCredential() (cred AuthenticatedCredential, err error) {
-	var val interface{}
-	val, err = c.Ask(`kong.client.get_credential`)
+	out := new(kong_plugin_protocol.AuthenticatedCredential)
+	err = c.Ask(`kong.client.get_credential`, nil, out)
 	if err != nil {
 		return
 	}
 
-	var ok bool
-	fmt.Println(val)
-	if cred, ok = val.(AuthenticatedCredential); !ok {
-		err = bridge.ReturnTypeError("AuthenticatedCredential")
+	cred = AuthenticatedCredential{
+		Id:         out.Id,
+		ConsumerId: out.ConsumerId,
 	}
 	return
 }
@@ -101,32 +95,63 @@ func (c Client) GetCredential() (cred AuthenticatedCredential, err error) {
 // kong.Client.LoadConsumer() returns the consumer from the datastore (or cache).
 // Will look up the consumer by id, and optionally will do a second search by name.
 func (c Client) LoadConsumer(consumer_id string, by_username bool) (consumer entities.Consumer, err error) {
-	var reply interface{}
-	reply, err = c.Ask(`kong.client.load_consumer`, consumer_id, by_username)
+	arg := &kong_plugin_protocol.ConsumerSpec{
+		Id:         consumer_id,
+		ByUsername: by_username,
+	}
+	out := new(kong_plugin_protocol.Consumer)
+	err = c.Ask(`kong.client.load_consumer`, arg, out)
 	if err != nil {
 		return
 	}
 
-	return checkConsumer(reply)
+	consumer = entities.Consumer{
+		Id:        out.Id,
+		CreatedAt: int(out.CreatedAt),
+		Username:  out.Username,
+		CustomId:  out.CustomId,
+		Tags:      out.Tags,
+	}
+	return
 }
 
 // kong.Client.GetConsumer() returns the consumer entity of the currently authenticated consumer.
 // If not set yet, it returns nil.
 func (c Client) GetConsumer() (consumer entities.Consumer, err error) {
-	var reply interface{}
-	reply, err = c.Ask(`kong.client.get_consumer`)
+	out := new(kong_plugin_protocol.Consumer)
+	err = c.Ask(`kong.client.get_consumer`, nil, out)
 	if err != nil {
 		return
 	}
 
-	return checkConsumer(reply)
+	consumer = entities.Consumer{
+		Id:        out.Id,
+		CreatedAt: int(out.CreatedAt),
+		Username:  out.Username,
+		CustomId:  out.CustomId,
+		Tags:      out.Tags,
+	}
+	return
 }
 
 // kong.Client.Authenticate() sets the authenticated consumer and/or credential
 // for the current request. While both consumer and credential can be nil,
 // it is required that at least one of them exists. Otherwise this function will throw an error.
 func (c Client) Authenticate(consumer *entities.Consumer, credential *AuthenticatedCredential) error {
-	_, err := c.Ask(`kong.client.authenticate`, consumer, credential)
+	arg := &kong_plugin_protocol.AuthenticateArgs{
+		Consumer: &kong_plugin_protocol.Consumer{
+			Id:        consumer.Id,
+			CreatedAt: int64(consumer.CreatedAt),
+			Username:  consumer.Username,
+			CustomId:  consumer.CustomId,
+			Tags:      consumer.Tags,
+		},
+		Credential: &kong_plugin_protocol.AuthenticatedCredential{
+			Id:         credential.Id,
+			ConsumerId: credential.ConsumerId,
+		},
+	}
+	err := c.Ask(`kong.client.authenticate`, arg, nil)
 	return err
 }
 
@@ -134,5 +159,6 @@ func (c Client) Authenticate(consumer *entities.Consumer, credential *Authentica
 // ("http", "https", "tcp" or "tls"), or nil, if no route has been matched,
 // which can happen when dealing with erroneous requests.
 func (c Client) GetProtocol(allow_terminated bool) (string, error) {
-	return c.AskString(`kong.client.get_protocol`, allow_terminated)
+	arg := &kong_plugin_protocol.Bool{V: allow_terminated}
+	return c.AskString(`kong.client.get_protocol`, arg)
 }

@@ -12,6 +12,8 @@ before sending it back to the client.
 package response
 
 import (
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
+	"google.golang.org/protobuf/types/known/structpb"
 	"github.com/Kong/go-pdk/bridge"
 )
 
@@ -21,9 +23,9 @@ type Response struct {
 }
 
 // Called by the plugin server at initialization.
-func New(ch chan interface{}) Response {
-	return Response{bridge.New(ch)}
-}
+// func New(conn net.Conn) Response {
+// 	return Response{bridge{conn}}
+// }
 
 // kong.Response.GetStatus() returns the HTTP status code
 // currently set for the downstream response (as an integer).
@@ -36,7 +38,7 @@ func New(ch chan interface{}) Response {
 // by Kong itself (i.e. via kong.Response.Exit()), the return value
 // will be returned as-is.
 func (r Response) GetStatus() (int, error) {
-	return r.AskInt(`kong.response.get_status`)
+	return r.AskInt(`kong.response.get_status`, nil)
 }
 
 // kong.Response.GetHeader() returns the value of the specified
@@ -55,7 +57,7 @@ func (r Response) GetStatus() (int, error) {
 // as underscores (_); that is, the header X-Custom-Header
 // can also be retrieved as x_custom_header.
 func (r Response) GetHeader(name string) (string, error) {
-	return r.AskString(`kong.response.get_header`, name)
+	return r.AskString(`kong.response.get_header`, bridge.WrapString(name))
 }
 
 // kong.Response.GetHeaders() returns a map holding the response headers.
@@ -79,10 +81,17 @@ func (r Response) GetHeader(name string) (string, error) {
 // default limit of 100 arguments.
 func (r Response) GetHeaders(max_headers int) (res map[string][]string, err error) {
 	if max_headers == -1 {
-		return r.AskMap(`kong.response.get_headers`)
+		max_headers = 100
 	}
 
-	return r.AskMap(`kong.response.get_headers`, max_headers)
+	arg := kong_plugin_protocol.Int{ V: int32(max_headers) }
+	out := new(structpb.Struct)
+	err = r.Ask(`kong.response.get_headers`, &arg, out)
+	if err != nil {
+		return nil, err
+	}
+
+	return bridge.UnwrapHeaders(out), nil
 }
 
 // kong.Response.GetSource() helps determining where the current response
@@ -102,7 +111,7 @@ func (r Response) GetHeaders(max_headers int) (res map[string][]string, err erro
 // - “service” is returned when the response was originated by
 // successfully contacting the proxied Service.
 func (r Response) GetSource() (string, error) {
-	return r.AskString(`kong.response.get_source`)
+	return r.AskString(`kong.response.get_source`, nil)
 }
 
 // kong.Response.SetStatus() allows changing the downstream response
@@ -111,7 +120,8 @@ func (r Response) GetSource() (string, error) {
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
 func (r Response) SetStatus(status int) error {
-	_, err := r.Ask(`kong.response.set_status`, status)
+	arg := kong_plugin_protocol.Int{ V: int32(status) }
+	err := r.Ask(`kong.response.set_status`, &arg, nil)
 	return err
 }
 
@@ -121,7 +131,11 @@ func (r Response) SetStatus(status int) error {
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
 func (r Response) SetHeader(k string, v string) error {
-	_, err := r.Ask(`kong.response.set_header`, k, v)
+	arg := kong_plugin_protocol.KV{
+		K: k,
+		V: structpb.NewStringValue(v),
+	}
+	err := r.Ask(`kong.response.set_header`, &arg, nil)
 	return err
 }
 
@@ -135,7 +149,11 @@ func (r Response) SetHeader(k string, v string) error {
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
 func (r Response) AddHeader(k string, v string) error {
-	_, err := r.Ask(`kong.response.add_header`, k, v)
+	arg := kong_plugin_protocol.KV{
+		K: k,
+		V: structpb.NewStringValue(v),
+	}
+	err := r.Ask(`kong.response.add_header`, &arg, nil)
 	return err
 }
 
@@ -145,7 +163,7 @@ func (r Response) AddHeader(k string, v string) error {
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
 func (r Response) ClearHeader(k string) error {
-	_, err := r.Ask(`kong.response.clear_header`, k)
+	err := r.Ask(`kong.response.clear_header`, bridge.WrapString(k), nil)
 	return err
 }
 
@@ -165,7 +183,12 @@ func (r Response) ClearHeader(k string) error {
 // This function overrides any existing header bearing the same name
 // as those specified in the headers argument. Other headers remain unchanged.
 func (r Response) SetHeaders(headers map[string][]string) error {
-	_, err := r.Ask(`kong.response.set_headers`, headers)
+	arg, err := bridge.WrapHeaders(headers)
+	if err != nil {
+		return err
+	}
+
+	err = r.Ask(`kong.response.set_headers`, arg, nil)
 	return err
 }
 
@@ -203,11 +226,22 @@ func (r Response) SetHeaders(headers map[string][]string) error {
 // Content-Length header in the produced response for convenience.
 
 func (r Response) Exit(status int, body string, headers map[string][]string) {
-	r.AskClose(`kong.response.exit`, status, body, headers)
+	h, _ := bridge.WrapHeaders(headers)
+	arg := kong_plugin_protocol.ExitArgs{
+		Status: int32(status),
+		Body: body,
+		Headers: h,
+	}
+	r.Ask(`kong.response.exit`, &arg, nil)
+	r.Close()
 }
 
 // kong.Response.ExitStatus() terminates current processing just like kong.Response.Exit()
 // without setting the body or headers.
 func (r Response) ExitStatus(status int) {
-	r.AskClose(`kong.response.exit`, status)
+	arg := kong_plugin_protocol.ExitArgs{
+		Status: int32(status),
+	}
+	r.Ask(`kong.response.exit`, &arg, nil)
+	r.Close()
 }

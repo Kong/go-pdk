@@ -13,6 +13,7 @@ See https://docs.konghq.com/latest/configuration/#trusted_ips
 package ip
 
 import (
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"github.com/Kong/go-pdk/bridge"
 	// 	"strconv"
 )
@@ -23,22 +24,19 @@ type Ip struct {
 }
 
 // called by the pluginserver at initialization.
-func New(ch chan interface{}) Ip {
-	return Ip{bridge.New(ch)}
-}
+// func New(ch chan interface{}) Ip {
+// 	return Ip{bridge.New(ch)}
+// }
 
 // Depending on the trusted_ips configuration property, this function
 // will return whether a given ip is trusted or not.
 // Both ipv4 and ipv6 are supported.
-func (ip Ip) IsTrusted(address string) (is_trusted bool, err error) {
-	reply, err := ip.Ask(`kong.ip.is_trusted`, address)
+func (ip Ip) IsTrusted(address string) (bool, error) {
+	out := new(kong_plugin_protocol.Bool)
+	err := ip.Ask(`kong.ip.is_trusted`, bridge.WrapString(address), out)
 	if err != nil {
-		return
+		return false, err
 	}
 
-	var ok bool
-	if is_trusted, ok = reply.(bool); !ok {
-		err = bridge.ReturnTypeError("boolean")
-	}
-	return
+	return out.V, nil
 }

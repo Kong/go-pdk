@@ -4,6 +4,8 @@ Manipulation of the response from the Service.
 package response
 
 import (
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
+	"google.golang.org/protobuf/types/known/structpb"
 	"github.com/Kong/go-pdk/bridge"
 )
 
@@ -13,14 +15,14 @@ type Response struct {
 }
 
 // Called by the plugin server at initialization.
-func New(ch chan interface{}) Response {
-	return Response{bridge.New(ch)}
-}
+// func New(ch chan interface{}) Response {
+// 	return Response{bridge.New(ch)}
+// }
 
 // kong.ServiceResponse.GetStatus() returns the HTTP status code
 // of the response from the Service as an integer.
 func (r Response) GetStatus() (i int, err error) {
-	return r.AskInt(`kong.service.response.get_status`)
+	return r.AskInt(`kong.service.response.get_status`, nil)
 }
 
 // kong.ServiceResponse.GetHeaders() returns a map holding the headers
@@ -42,10 +44,17 @@ func (r Response) GetStatus() (i int, err error) {
 // default limit of 100 arguments.
 func (r Response) GetHeaders(max_headers int) (map[string][]string, error) {
 	if max_headers == -1 {
-		return r.AskMap(`kong.service.response.get_headers`)
+		max_headers = 100
 	}
 
-	return r.AskMap(`kong.service.response.get_headers`, max_headers)
+	arg := kong_plugin_protocol.Int{ V: int32(max_headers) }
+	out := new(structpb.Struct)
+	err := r.Ask(`kong.service.response.get_headers`, &arg, out)
+	if err != nil {
+		return nil, err
+	}
+
+	return bridge.UnwrapHeaders(out), nil
 }
 
 // kong.ServiceResponse.GetHeader() returns the value of the specified response header.
@@ -54,11 +63,11 @@ func (r Response) GetHeaders(max_headers int) (map[string][]string, error) {
 // if it was present in the response from the Service
 // (ignoring headers added by Kong itself).
 func (r Response) GetHeader(name string) (string, error) {
-	return r.AskString(`kong.service.response.get_header`, name)
+	return r.AskString(`kong.service.response.get_header`, bridge.WrapString(name))
 }
 
 // kong.ServiceResponse.GetRawBody() returns the raw body
 // of the response from the Service.
 func (r Response) GetRawBody() (string, error) {
-  return r.AskString(`kong.service.response.get_raw_body`)
+  return r.AskString(`kong.service.response.get_raw_body`, nil)
 }

@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net"
-	"time"
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
@@ -22,7 +21,7 @@ func servePb(conn net.Conn, rh *rpcHandler) (err error) {
 			break
 		}
 
-		rd, err := codecPb(rh, d)
+		rd, err := codecPb(rh, conn, d)
 		if err != nil {
 			break
 		}
@@ -73,14 +72,14 @@ func writePbFrame(conn net.Conn, data []byte) (err error) {
 	return
 }
 
-func codecPb(rh *rpcHandler, data []byte) (retData []byte, err error) {
+func codecPb(rh *rpcHandler, conn net.Conn, data []byte) (retData []byte, err error) {
 	var m kong_plugin_protocol.RpcCall
 	err = proto.Unmarshal(data, &m)
 	if err != nil {
 		return
 	}
 
-	rm, err := handlePbCmd(rh, m)
+	rm, err := handlePbCmd(rh, conn, m)
 	if err != nil {
 		return
 	}
@@ -109,7 +108,7 @@ func pbInstanceStatus(status InstanceStatus) *kong_plugin_protocol.RpcReturn_Ins
 	}
 }
 
-func handlePbCmd(rh *rpcHandler, m kong_plugin_protocol.RpcCall) (rm *kong_plugin_protocol.RpcReturn, err error) {
+func handlePbCmd(rh *rpcHandler, conn net.Conn, m kong_plugin_protocol.RpcCall) (rm *kong_plugin_protocol.RpcReturn, err error) {
 	switch c := m.Call.(type) {
 	case *kong_plugin_protocol.RpcCall_CmdGetPluginNames:
 		log.Printf("GetPluginNames: %v", c)
@@ -162,7 +161,7 @@ func handlePbCmd(rh *rpcHandler, m kong_plugin_protocol.RpcCall) (rm *kong_plugi
 
 	case *kong_plugin_protocol.RpcCall_CmdHandleEvent:
 		log.Printf("HandleEvent: %v", c)
-		err = handlePbEvent(rh, c.CmdHandleEvent)
+		err = handlePbEvent(rh, conn, c.CmdHandleEvent)
 		rm = nil
 
 	default:
@@ -172,7 +171,7 @@ func handlePbCmd(rh *rpcHandler, m kong_plugin_protocol.RpcCall) (rm *kong_plugi
 	return
 }
 
-func handlePbEvent(rh *rpcHandler, e *kong_plugin_protocol.CmdHandleEvent) error {
+func handlePbEvent(rh *rpcHandler, conn net.Conn, e *kong_plugin_protocol.CmdHandleEvent) error {
 	rh.lock.RLock()
 	instance, ok := rh.instances[int(e.InstanceId)]
 	rh.lock.RUnlock()
@@ -185,55 +184,9 @@ func handlePbEvent(rh *rpcHandler, e *kong_plugin_protocol.CmdHandleEvent) error
 		return fmt.Errorf("undefined method %s", e.EventName)
 	}
 
-	ipc := make(chan interface{})
+	pdk := pdk.Init(conn)
 
-
-	event := eventData{
-		instance: instance,
-		ipc:      ipc,
-		pdk:      pdk.Init(ipc),
-	}
-
-	go func() {
-		for {
-			d, more := <- event.ipc
-			if ! more {
-				return
-			}
-			sd, ok := d.(StepData)
-			if ok {
-				writePbFrame()
-			}
-		}
-	}
-
-	h(event.pdk)
-	close(event.pdk)
-
-	return nil
-
-
-	//------------
-
-	rh.addEvent(&event)
-
-	//log.Printf("Will launch goroutine for key %d / operation %s\n", key, op)
-	go func() {
-		_ = <-ipc
-		h(event.pdk)
-
-		func() {
-			defer func() { recover() }()
-			ipc <- "ret"
-		}()
-
-		rh.lock.Lock()
-		defer rh.lock.Unlock()
-		event.instance.lastEventTime = time.Now()
-		delete(rh.events, event.id)
-	}()
-
-	ipc <- "run" // kickstart the handler
+	h(pdk)
 
 	return nil
 }

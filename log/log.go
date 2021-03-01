@@ -4,6 +4,7 @@ Write to log file.
 package log
 
 import (
+	"google.golang.org/protobuf/types/known/structpb"
 	"github.com/Kong/go-pdk/bridge"
 )
 
@@ -13,67 +14,70 @@ type Log struct {
 }
 
 // Called by the plugin server at initialization.
-func New(ch chan interface{}) Log {
-	return Log{bridge.New(ch)}
+// func New(ch chan interface{}) Log {
+// 	return Log{bridge.New(ch)}
+// }
+
+
+func (r Log) doLog(method string, args []interface{}) error {
+	l, err := structpb.NewList(args)
+	if err != nil {
+		return err
+	}
+
+	return r.Ask(method, l, nil)
 }
 
 func (r Log) Alert(args ...interface{}) error {
-	_, err := r.Ask(`kong.log.alert`, args...)
-	return err
+	return r.doLog(`kong.log.alert`, args)
 }
 
 func (r Log) Crit(args ...interface{}) error {
-	_, err := r.Ask(`kong.log.crit`, args...)
-	return err
+	return r.doLog(`kong.log.crit`, args)
 }
 
 func (r Log) Err(args ...interface{}) error {
-	_, err := r.Ask(`kong.log.err`, args...)
-	return err
+	return r.doLog(`kong.log.err`, args)
 }
 
 func (r Log) Warn(args ...interface{}) error {
-	_, err := r.Ask(`kong.log.warn`, args...)
-	return err
+	return r.doLog(`kong.log.warn`, args)
 }
 
 func (r Log) Notice(args ...interface{}) error {
-	_, err := r.Ask(`kong.log.notice`, args...)
-	return err
+	return r.doLog(`kong.log.notice`, args)
 }
 
 func (r Log) Info(args ...interface{}) error {
-	_, err := r.Ask(`kong.log.info`, args...)
-	return err
+	return r.doLog(`kong.log.info`, args)
 }
 
 func (r Log) Debug(args ...interface{}) error {
-	_, err := r.Ask(`kong.log.debug`, args...)
-	return err
+	return r.doLog(`kong.log.debug`, args)
 }
 
-var (
-	modeSet = map[string]string{ "mode": "set" }
-	modeAdd = map[string]string{ "mode": "add" }
-	modeReplace = map[string]string{ "mode": "replace" }
-)
-
-func (r Log) SetSerializeValue(key string, v interface{}) error {
-	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeSet)
-	return err
-}
-
-func (r Log) SetSerializeValueAdd(key string, v interface{}) error {
-	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeAdd)
-	return err
-}
-
-func (r Log) SetSerializeValueReplace(key string, v interface{}) error {
-	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeReplace)
-	return err
-}
+// var (
+// 	modeSet = map[string]string{ "mode": "set" }
+// 	modeAdd = map[string]string{ "mode": "add" }
+// 	modeReplace = map[string]string{ "mode": "replace" }
+// )
+//
+// func (r Log) SetSerializeValue(key string, v interface{}) error {
+// 	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeSet)
+// 	return err
+// }
+//
+// func (r Log) SetSerializeValueAdd(key string, v interface{}) error {
+// 	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeAdd)
+// 	return err
+// }
+//
+// func (r Log) SetSerializeValueReplace(key string, v interface{}) error {
+// 	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeReplace)
+// 	return err
+// }
 
 
 func (r Log) Serialize() (s string, err error) {
-	return r.AskString(`kong.log.serialize`)
+	return r.AskString(`kong.log.serialize`, nil)
 }

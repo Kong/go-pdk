@@ -16,6 +16,8 @@ For example, to get the client's IP address, you'd use `kong.Client.GetIp()`.
 package pdk
 
 import (
+	"net"
+	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/client"
 	"github.com/Kong/go-pdk/ctx"
 	"github.com/Kong/go-pdk/ip"
@@ -47,19 +49,20 @@ type PDK struct {
 }
 
 // Init initialize go pdk.  Called by the pluginserver at initialization.
-func Init(ch chan interface{}) *PDK {
+func Init(conn net.Conn) *PDK {
+	b := bridge.New(conn)
 	return &PDK{
-		Client:          client.New(ch),
-		Ctx:             ctx.New(ch),
-		Log:             log.New(ch),
-		Nginx:           nginx.New(ch),
-		Request:         request.New(ch),
-		Response:        response.New(ch),
-		Router:          router.New(ch),
-		IP:              ip.New(ch),
-		Node:            node.New(ch),
-		Service:         service.New(ch),
-		ServiceRequest:  service_request.New(ch),
-		ServiceResponse: service_response.New(ch),
+		Client:          client.Client{b},
+		Ctx:             ctx.Ctx{b},
+		Log:             log.Log{b},
+		Nginx:           nginx.Nginx{b},
+		Request:         request.Request{b},
+		Response:        response.Response{b},
+		Router:          router.Router{b},
+		IP:              ip.Ip{b},
+		Node:            node.Node{b},
+		Service:         service.Service{b},
+		ServiceRequest:  service_request.Request{b},
+		ServiceResponse: service_response.Response{b},
 	}
 }
