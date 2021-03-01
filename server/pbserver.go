@@ -1,0 +1,268 @@
+package server
+
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"io"
+	"log"
+	"net"
+	"time"
+
+	"github.com/Kong/go-pdk"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
+	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/types/known/structpb"
+)
+
+func servePb(conn net.Conn, rh *rpcHandler) (err error) {
+	for {
+		d, err := readPbFrame(conn)
+		if err != nil {
+			break
+		}
+
+		rd, err := codecPb(rh, d)
+		if err != nil {
+			break
+		}
+
+		err = writePbFrame(conn, rd)
+		if err != nil {
+			break
+		}
+	}
+
+	conn.Close()
+	if err != nil {
+		log.Print(err)
+	}
+
+	return
+}
+
+func readPbFrame(conn net.Conn) (data []byte, err error) {
+	var len uint32
+	err = binary.Read(conn, binary.LittleEndian, &len)
+	if err != nil {
+		return
+	}
+
+	data = make([]byte, len)
+	if data == nil {
+		return nil, errors.New("no memory")
+	}
+
+	_, err = io.ReadFull(conn, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return
+}
+
+func writePbFrame(conn net.Conn, data []byte) (err error) {
+	var len uint32 = uint32(len(data))
+	err = binary.Write(conn, binary.LittleEndian, len)
+	if err != nil {
+		return
+	}
+
+	_, err = conn.Write(data)
+
+	return
+}
+
+func codecPb(rh *rpcHandler, data []byte) (retData []byte, err error) {
+	var m kong_plugin_protocol.RpcCall
+	err = proto.Unmarshal(data, &m)
+	if err != nil {
+		return
+	}
+
+	rm, err := handlePbCmd(rh, m)
+	if err != nil {
+		return
+	}
+
+	if rm != nil {
+		retData, err = proto.Marshal(rm)
+	}
+
+	return
+}
+
+func pbInstanceStatus(status InstanceStatus) *kong_plugin_protocol.RpcReturn_InstanceStatus {
+	config, err := structpb.NewValue(status.Config)
+	if err != nil {
+		log.Printf("error %s encoding config value %v", err, status.Config)
+		config = structpb.NewNullValue()
+	}
+
+	return &kong_plugin_protocol.RpcReturn_InstanceStatus{
+		InstanceStatus: &kong_plugin_protocol.InstanceStatus{
+			Name:       status.Name,
+			InstanceId: int32(status.Id),
+			Config:     config,
+			StartedAt:  status.StartTime,
+		},
+	}
+}
+
+func handlePbCmd(rh *rpcHandler, m kong_plugin_protocol.RpcCall) (rm *kong_plugin_protocol.RpcReturn, err error) {
+	switch c := m.Call.(type) {
+	case *kong_plugin_protocol.RpcCall_CmdGetPluginNames:
+		log.Printf("GetPluginNames: %v", c)
+
+	case *kong_plugin_protocol.RpcCall_CmdGetPluginInfo:
+		log.Printf("GetPluginInfo: %v", c)
+
+	case *kong_plugin_protocol.RpcCall_CmdStartInstance:
+		log.Printf("StartInstance: %v", c)
+		config := PluginConfig{
+			Name:   c.CmdStartInstance.Name,
+			Config: c.CmdStartInstance.Config,
+		}
+		var status InstanceStatus
+		err = rh.StartInstance(config, &status)
+		if err != nil {
+			return
+		}
+
+		rm = &kong_plugin_protocol.RpcReturn{
+			Sequence: m.Sequence,
+			Return:   pbInstanceStatus(status),
+		}
+
+	case *kong_plugin_protocol.RpcCall_CmdGetInstanceStatus:
+		log.Printf("GetInstanceStatus: %v", c)
+		var status InstanceStatus
+		err = rh.InstanceStatus(int(c.CmdGetInstanceStatus.InstanceId), &status)
+		if err != nil {
+			return
+		}
+
+		rm = &kong_plugin_protocol.RpcReturn{
+			Sequence: m.Sequence,
+			Return:   pbInstanceStatus(status),
+		}
+
+	case *kong_plugin_protocol.RpcCall_CmdCloseInstance:
+		log.Printf("CloseInstance: %v", c)
+		var status InstanceStatus
+		err = rh.CloseInstance(int(c.CmdCloseInstance.InstanceId), &status)
+		if err != nil {
+			return
+		}
+
+		rm = &kong_plugin_protocol.RpcReturn{
+			Sequence: m.Sequence,
+			Return:   pbInstanceStatus(status),
+		}
+
+	case *kong_plugin_protocol.RpcCall_CmdHandleEvent:
+		log.Printf("HandleEvent: %v", c)
+		err = handlePbEvent(rh, c.CmdHandleEvent)
+		rm = nil
+
+	default:
+		err = fmt.Errorf("RPC call has unexpected type %T", c)
+	}
+
+	return
+}
+
+func handlePbEvent(rh *rpcHandler, e *kong_plugin_protocol.CmdHandleEvent) error {
+	rh.lock.RLock()
+	instance, ok := rh.instances[int(e.InstanceId)]
+	rh.lock.RUnlock()
+	if !ok {
+		return fmt.Errorf("no plugin instance %d", e.InstanceId)
+	}
+
+	h, ok := instance.handlers[e.EventName]
+	if !ok {
+		return fmt.Errorf("undefined method %s", e.EventName)
+	}
+
+	ipc := make(chan interface{})
+
+
+	event := eventData{
+		instance: instance,
+		ipc:      ipc,
+		pdk:      pdk.Init(ipc),
+	}
+
+	go func() {
+		for {
+			d, more := <- event.ipc
+			if ! more {
+				return
+			}
+			sd, ok := d.(StepData)
+			if ok {
+				writePbFrame()
+			}
+		}
+	}
+
+	h(event.pdk)
+	close(event.pdk)
+
+	return nil
+
+
+	//------------
+
+	rh.addEvent(&event)
+
+	//log.Printf("Will launch goroutine for key %d / operation %s\n", key, op)
+	go func() {
+		_ = <-ipc
+		h(event.pdk)
+
+		func() {
+			defer func() { recover() }()
+			ipc <- "ret"
+		}()
+
+		rh.lock.Lock()
+		defer rh.lock.Unlock()
+		event.instance.lastEventTime = time.Now()
+		delete(rh.events, event.id)
+	}()
+
+	ipc <- "run" // kickstart the handler
+
+	return nil
+}
+
+// Start the embedded plugin server, ProtoBuf version.
+// Handles CLI flags, and returns immediately if appropriate.
+// Otherwise, returns only if the server is stopped.
+func StartPbServer(constructor func() interface{}, version string, priority int) error {
+	rh := newRpcHandler(constructor, version, priority)
+
+	if *dump {
+		dumpInfo(*rh)
+		return nil
+	}
+
+	listener, err := openSocket()
+	if err != nil {
+		return err
+	}
+	defer listener.Close()
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		go servePb(conn, rh)
+	}
+
+	return nil
+}
