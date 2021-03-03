@@ -11,7 +11,7 @@ import (
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"github.com/golang/protobuf/proto"
-	"google.golang.org/protobuf/types/known/structpb"
+// 	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func servePb(conn net.Conn, rh *rpcHandler) (err error) {
@@ -92,17 +92,17 @@ func codecPb(rh *rpcHandler, conn net.Conn, data []byte) (retData []byte, err er
 }
 
 func pbInstanceStatus(status InstanceStatus) *kong_plugin_protocol.RpcReturn_InstanceStatus {
-	config, err := structpb.NewValue(status.Config)
-	if err != nil {
-		log.Printf("error %s encoding config value %v", err, status.Config)
-		config = structpb.NewNullValue()
-	}
+// 	config, err := structpb.NewValue(status.Config)
+// 	if err != nil {
+// 		log.Printf("error [%s] encoding config value [%v]", err, status.Config)
+// 		config = structpb.NewNullValue()
+// 	}
 
 	return &kong_plugin_protocol.RpcReturn_InstanceStatus{
 		InstanceStatus: &kong_plugin_protocol.InstanceStatus{
 			Name:       status.Name,
 			InstanceId: int32(status.Id),
-			Config:     config,
+// 			Config:     config,
 			StartedAt:  status.StartTime,
 		},
 	}
@@ -122,8 +122,10 @@ func handlePbCmd(rh *rpcHandler, conn net.Conn, m kong_plugin_protocol.RpcCall) 
 			Name:   c.CmdStartInstance.Name,
 			Config: c.CmdStartInstance.Config,
 		}
+// 		log.Printf("config to start: %#v", config)
 		var status InstanceStatus
 		err = rh.StartInstance(config, &status)
+		log.Printf("after StartInstance: err [%v], status: [%#v]", err, status)
 		if err != nil {
 			return
 		}
@@ -162,7 +164,9 @@ func handlePbCmd(rh *rpcHandler, conn net.Conn, m kong_plugin_protocol.RpcCall) 
 	case *kong_plugin_protocol.RpcCall_CmdHandleEvent:
 		log.Printf("HandleEvent: %v", c)
 		err = handlePbEvent(rh, conn, c.CmdHandleEvent)
-		rm = nil
+		rm = &kong_plugin_protocol.RpcReturn{
+			Sequence: m.Sequence,
+		}
 
 	default:
 		err = fmt.Errorf("RPC call has unexpected type %T", c)
@@ -172,21 +176,27 @@ func handlePbCmd(rh *rpcHandler, conn net.Conn, m kong_plugin_protocol.RpcCall) 
 }
 
 func handlePbEvent(rh *rpcHandler, conn net.Conn, e *kong_plugin_protocol.CmdHandleEvent) error {
+// 	log.Printf("handlePbEvent: rh: %#v, conn: %#v, e: %#v", rh, conn, e)
 	rh.lock.RLock()
 	instance, ok := rh.instances[int(e.InstanceId)]
 	rh.lock.RUnlock()
+	log.Printf("instance: %#v", instance)
 	if !ok {
 		return fmt.Errorf("no plugin instance %d", e.InstanceId)
 	}
 
 	h, ok := instance.handlers[e.EventName]
+	log.Printf("h: %#v", h)
 	if !ok {
 		return fmt.Errorf("undefined method %s", e.EventName)
 	}
 
 	pdk := pdk.Init(conn)
+// 	log.Printf("pdk: %#v", pdk)
 
 	h(pdk)
+	writePbFrame(conn, []byte{})
+	log.Printf("event handled")
 
 	return nil
 }

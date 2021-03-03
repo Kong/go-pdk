@@ -99,6 +99,7 @@ func UnwrapHeaders(st *structpb.Struct) map[string][]string {
 
 
 func (b PdkBridge) Ask(method string, args proto.Message, out proto.Message) error {
+	log.Printf("Ask: method: [%v], args: [%#v], out: [%T]", method, args, out)
 	err := writePbFrame(b.conn, []byte(method))
 	if err != nil {
 		return err
