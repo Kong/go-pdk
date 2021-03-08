@@ -111,13 +111,13 @@ func pbInstanceStatus(status InstanceStatus) *kong_plugin_protocol.RpcReturn_Ins
 func handlePbCmd(rh *rpcHandler, conn net.Conn, m kong_plugin_protocol.RpcCall) (rm *kong_plugin_protocol.RpcReturn, err error) {
 	switch c := m.Call.(type) {
 	case *kong_plugin_protocol.RpcCall_CmdGetPluginNames:
-		log.Printf("GetPluginNames: %v", c)
+// 		log.Printf("GetPluginNames: %v", c)
 
 	case *kong_plugin_protocol.RpcCall_CmdGetPluginInfo:
-		log.Printf("GetPluginInfo: %v", c)
+// 		log.Printf("GetPluginInfo: %v", c)
 
 	case *kong_plugin_protocol.RpcCall_CmdStartInstance:
-		log.Printf("StartInstance: %v", c)
+// 		log.Printf("StartInstance: %v", c)
 		config := PluginConfig{
 			Name:   c.CmdStartInstance.Name,
 			Config: c.CmdStartInstance.Config,
@@ -125,7 +125,7 @@ func handlePbCmd(rh *rpcHandler, conn net.Conn, m kong_plugin_protocol.RpcCall) 
 // 		log.Printf("config to start: %#v", config)
 		var status InstanceStatus
 		err = rh.StartInstance(config, &status)
-		log.Printf("after StartInstance: err [%v], status: [%#v]", err, status)
+// 		log.Printf("after StartInstance: err [%v], status: [%v]", err, status)
 		if err != nil {
 			return
 		}
@@ -136,7 +136,7 @@ func handlePbCmd(rh *rpcHandler, conn net.Conn, m kong_plugin_protocol.RpcCall) 
 		}
 
 	case *kong_plugin_protocol.RpcCall_CmdGetInstanceStatus:
-		log.Printf("GetInstanceStatus: %v", c)
+// 		log.Printf("GetInstanceStatus: %v", c)
 		var status InstanceStatus
 		err = rh.InstanceStatus(int(c.CmdGetInstanceStatus.InstanceId), &status)
 		if err != nil {
@@ -149,7 +149,7 @@ func handlePbCmd(rh *rpcHandler, conn net.Conn, m kong_plugin_protocol.RpcCall) 
 		}
 
 	case *kong_plugin_protocol.RpcCall_CmdCloseInstance:
-		log.Printf("CloseInstance: %v", c)
+// 		log.Printf("CloseInstance: %v", c)
 		var status InstanceStatus
 		err = rh.CloseInstance(int(c.CmdCloseInstance.InstanceId), &status)
 		if err != nil {
@@ -162,7 +162,7 @@ func handlePbCmd(rh *rpcHandler, conn net.Conn, m kong_plugin_protocol.RpcCall) 
 		}
 
 	case *kong_plugin_protocol.RpcCall_CmdHandleEvent:
-		log.Printf("HandleEvent: %v", c)
+// 		log.Printf("HandleEvent: %v", c)
 		err = handlePbEvent(rh, conn, c.CmdHandleEvent)
 		rm = &kong_plugin_protocol.RpcReturn{
 			Sequence: m.Sequence,
@@ -180,13 +180,13 @@ func handlePbEvent(rh *rpcHandler, conn net.Conn, e *kong_plugin_protocol.CmdHan
 	rh.lock.RLock()
 	instance, ok := rh.instances[int(e.InstanceId)]
 	rh.lock.RUnlock()
-	log.Printf("instance: %#v", instance)
+// 	log.Printf("instance: %#v", instance)
 	if !ok {
 		return fmt.Errorf("no plugin instance %d", e.InstanceId)
 	}
 
 	h, ok := instance.handlers[e.EventName]
-	log.Printf("h: %#v", h)
+// 	log.Printf("h: %#v", h)
 	if !ok {
 		return fmt.Errorf("undefined method %s", e.EventName)
 	}
@@ -196,7 +196,7 @@ func handlePbEvent(rh *rpcHandler, conn net.Conn, e *kong_plugin_protocol.CmdHan
 
 	h(pdk)
 	writePbFrame(conn, []byte{})
-	log.Printf("event handled")
+// 	log.Printf("event handled")
 
 	return nil
 }

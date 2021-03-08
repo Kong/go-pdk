@@ -81,6 +81,8 @@ func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus)
 		handlers:  getHandlers(instanceConfig),
 	}
 
+// 	log.Printf("instance: %v", instance)
+
 	rh.addInstance(&instance)
 
 	*status = InstanceStatus{
@@ -90,7 +92,7 @@ func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus)
 		StartTime: instance.startTime.Unix(),
 	}
 
-	log.Printf("Started instance %#v:%v", config.Name, instance.id)
+// 	log.Printf("Started instance %#v:%v", config.Name, instance.id)
 
 	return nil
 }
