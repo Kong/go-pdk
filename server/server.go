@@ -28,16 +28,6 @@ var (
 	help = flag.Bool("help", false, "Show usage info")
 )
 
-func init() {
-	flag.Parse()
-
-	if *help {
-		flag.Usage()
-		os.Exit(2)
-	}
-}
-
-
 func getName() (name string, err error) {
 	execPath, err := os.Executable()
 	if err != nil {
@@ -121,6 +111,13 @@ func dumpInfo(rh rpcHandler) {
 // Handles CLI flags, and returns immediately if appropriate.
 // Otherwise, returns only if the server is stopped.
 func StartServer(constructor func() interface{}, version string, priority int) error {
+	flag.Parse()
+
+	if *help {
+		flag.Usage()
+		os.Exit(2)
+	}
+
 	rh := newRpcHandler(constructor, version, priority)
 
 	if *dump {
