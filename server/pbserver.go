@@ -204,7 +204,7 @@ func handlePbEvent(rh *rpcHandler, conn net.Conn, e *kong_plugin_protocol.CmdHan
 // Start the embedded plugin server, ProtoBuf version.
 // Handles CLI flags, and returns immediately if appropriate.
 // Otherwise, returns only if the server is stopped.
-func StartPbServer(constructor func() interface{}, version string, priority int) error {
+func StartServer(constructor func() interface{}, version string, priority int) error {
 	rh := newRpcHandler(constructor, version, priority)
 
 	if *dump {
