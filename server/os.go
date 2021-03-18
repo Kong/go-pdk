@@ -68,6 +68,12 @@ func openSocket() (listener net.Listener, err error) {
 	return
 }
 
+type serverInfo struct {
+	Protocol string
+	SocketPath string
+	Plugins []pluginInfo
+}
+
 func dumpInfo(rh rpcHandler) {
 	info, err := rh.getInfo()
 	if err != nil {
@@ -75,9 +81,19 @@ func dumpInfo(rh rpcHandler) {
 		return
 	}
 
+	socketPath, err := getSocketPath()
+	if err != nil {
+		log.Printf("getting Socket path: %s", err)
+		return
+	}
+
 	var handle codec.JsonHandle
 	enc := codec.NewEncoder(os.Stdout, &handle)
-	err = enc.Encode([1]pluginInfo{ info })
+	err = enc.Encode(serverInfo{
+		Protocol: "ProtoBuf:1",
+		SocketPath: socketPath,
+		Plugins: []pluginInfo{ info },
+	})
 	if err != nil {
 		log.Printf("encoding plugin info: %s", err)
 	}
