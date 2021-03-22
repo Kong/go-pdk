@@ -12,20 +12,15 @@ before sending it back to the client.
 package response
 
 import (
+	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"google.golang.org/protobuf/types/known/structpb"
-	"github.com/Kong/go-pdk/bridge"
 )
 
 // Holds this module's functions.  Accessible as `kong.Response`
 type Response struct {
 	bridge.PdkBridge
 }
-
-// Called by the plugin server at initialization.
-// func New(conn net.Conn) Response {
-// 	return Response{bridge{conn}}
-// }
 
 // kong.Response.GetStatus() returns the HTTP status code
 // currently set for the downstream response (as an integer).
@@ -84,7 +79,7 @@ func (r Response) GetHeaders(max_headers int) (res map[string][]string, err erro
 		max_headers = 100
 	}
 
-	arg := kong_plugin_protocol.Int{ V: int32(max_headers) }
+	arg := kong_plugin_protocol.Int{V: int32(max_headers)}
 	out := new(structpb.Struct)
 	err = r.Ask(`kong.response.get_headers`, &arg, out)
 	if err != nil {
@@ -120,7 +115,7 @@ func (r Response) GetSource() (string, error) {
 // This function should be used in the header_filter phase,
 // as Kong is preparing headers to be sent back to the client.
 func (r Response) SetStatus(status int) error {
-	arg := kong_plugin_protocol.Int{ V: int32(status) }
+	arg := kong_plugin_protocol.Int{V: int32(status)}
 	err := r.Ask(`kong.response.set_status`, &arg, nil)
 	return err
 }
@@ -228,8 +223,8 @@ func (r Response) SetHeaders(headers map[string][]string) error {
 func (r Response) Exit(status int, body string, headers map[string][]string) {
 	h, _ := bridge.WrapHeaders(headers)
 	arg := kong_plugin_protocol.ExitArgs{
-		Status: int32(status),
-		Body: body,
+		Status:  int32(status),
+		Body:    body,
 		Headers: h,
 	}
 	r.Ask(`kong.response.exit`, &arg, nil)

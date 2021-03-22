@@ -18,23 +18,10 @@ type Client struct {
 	bridge.PdkBridge
 }
 
-func checkConsumer(v interface{}) (consumer entities.Consumer, err error) {
-	consumer, ok := v.(entities.Consumer)
-	if !ok {
-		err = bridge.ReturnTypeError("Consumer Entity")
-	}
-	return
-}
-
 type AuthenticatedCredential struct {
 	Id         string `json:"id"`
 	ConsumerId string `json:"consumer_id"`
 }
-
-// Called by the plugin server at initialization.
-// func New(conn io.ReaderWriter) Client {
-// 	return Client{bridge.New(conn)}
-// }
 
 // kong.Client.GetIp() returns the remote address of the client making the request.
 // This will always return the address of the client directly connecting to Kong.

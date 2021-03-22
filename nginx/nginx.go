@@ -4,20 +4,15 @@ Access Nginx APIs.
 package nginx
 
 import (
+	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"google.golang.org/protobuf/types/known/structpb"
-	"github.com/Kong/go-pdk/bridge"
 )
 
 // Holds this module's functions.  Accessible as `kong.Nginx`
 type Nginx struct {
 	bridge.PdkBridge
 }
-
-// Called by the plugin server at initialization.
-// func New(ch chan interface{}) Nginx {
-// 	return Nginx{bridge.New(ch)}
-// }
 
 // kong.Nginx.GetVar() returns an Nginx variable.  Equivalent to `ngx.var[k]`
 func (n Nginx) GetVar(k string) (string, error) {

@@ -39,11 +39,6 @@ type Ctx struct {
 	bridge.PdkBridge
 }
 
-// Called by the plugin server at initialization.
-// func New(ch chan interface{}) Ctx {
-// 	return Ctx{bridge.New(ch)}
-// }
-
 // kong.Ctx.SetShared() sets a value in the `kong.ctx.shared` request context table.
 func (c Ctx) SetShared(k string, value interface{}) error {
 	err := c.Ask(`kong.ctx.shared.set`, bridge.WrapString(k), nil)

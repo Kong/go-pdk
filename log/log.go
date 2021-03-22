@@ -4,20 +4,14 @@ Write to log file.
 package log
 
 import (
-	"google.golang.org/protobuf/types/known/structpb"
 	"github.com/Kong/go-pdk/bridge"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // Holds this module's functions.  Accessible as `kong.Log`
 type Log struct {
 	bridge.PdkBridge
 }
-
-// Called by the plugin server at initialization.
-// func New(ch chan interface{}) Log {
-// 	return Log{bridge.New(ch)}
-// }
-
 
 func (r Log) doLog(method string, args []interface{}) error {
 	l, err := structpb.NewList(args)
@@ -76,7 +70,6 @@ func (r Log) Debug(args ...interface{}) error {
 // 	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeReplace)
 // 	return err
 // }
-
 
 func (r Log) Serialize() (s string, err error) {
 	return r.AskString(`kong.log.serialize`, nil)

@@ -13,20 +13,14 @@ See https://docs.konghq.com/latest/configuration/#trusted_ips
 package ip
 
 import (
-	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"github.com/Kong/go-pdk/bridge"
-	// 	"strconv"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 )
 
 // Holds this module's functions.  Accessible as `kong.Ip`
 type Ip struct {
 	bridge.PdkBridge
 }
-
-// called by the pluginserver at initialization.
-// func New(ch chan interface{}) Ip {
-// 	return Ip{bridge.New(ch)}
-// }
 
 // Depending on the trusted_ips configuration property, this function
 // will return whether a given ip is trusted or not.

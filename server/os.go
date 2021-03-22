@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -7,13 +6,14 @@ import (
 	"net"
 	"os"
 	"path"
+
 	"github.com/ugorji/go/codec"
 )
 
 var (
-	kongPrefix     = flag.String("kong-prefix", "/usr/local/kong", "Kong prefix path (specified by the -p argument commonly used in the kong cli)")
-	dump = flag.Bool("dump", false, "Dump info about plugins")
-	help = flag.Bool("help", false, "Show usage info")
+	kongPrefix = flag.String("kong-prefix", "/usr/local/kong", "Kong prefix path (specified by the -p argument commonly used in the kong cli)")
+	dump       = flag.Bool("dump", false, "Dump info about plugins")
+	help       = flag.Bool("help", false, "Show usage info")
 )
 
 func init() {
@@ -24,7 +24,6 @@ func init() {
 		os.Exit(2)
 	}
 }
-
 
 func getName() (name string, err error) {
 	execPath, err := os.Executable()
@@ -42,7 +41,7 @@ func getSocketPath() (pth string, err error) {
 		return
 	}
 
-	pth = path.Join(*kongPrefix, name + ".socket")
+	pth = path.Join(*kongPrefix, name+".socket")
 	return
 }
 
@@ -69,9 +68,9 @@ func openSocket() (listener net.Listener, err error) {
 }
 
 type serverInfo struct {
-	Protocol string
+	Protocol   string
 	SocketPath string
-	Plugins []pluginInfo
+	Plugins    []pluginInfo
 }
 
 func dumpInfo(rh rpcHandler) {
@@ -90,9 +89,9 @@ func dumpInfo(rh rpcHandler) {
 	var handle codec.JsonHandle
 	enc := codec.NewEncoder(os.Stdout, &handle)
 	err = enc.Encode(serverInfo{
-		Protocol: "ProtoBuf:1",
+		Protocol:   "ProtoBuf:1",
 		SocketPath: socketPath,
-		Plugins: []pluginInfo{ info },
+		Plugins:    []pluginInfo{info},
 	})
 	if err != nil {
 		log.Printf("encoding plugin info: %s", err)

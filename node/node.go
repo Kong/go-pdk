@@ -4,13 +4,18 @@ Node-level utilities
 package node
 
 import (
-	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 )
 
 // Holds this module's functions.  Accessible as `kong.Node`
 type Node struct {
 	bridge.PdkBridge
+}
+
+type workerLuaVmStats struct {
+	HttpAllocatedGc int64 `json:"http_allocated_gc"`
+	Pid             int64 `json:"pid"`
 }
 
 type MemoryStats struct {
@@ -24,16 +29,8 @@ type MemoryStats struct {
 			Capacity       int64 `json:"capacity"`
 		} `json:"kong_db_cache"`
 	} `json:"lua_shared_dicts"`
-	WorkersLuaVms []struct {
-		HttpAllocatedGc int64 `json:"http_allocated_gc"`
-		Pid             int64 `json:"pid"`
-	} `json:"workers_lua_vms"`
+	WorkersLuaVms []workerLuaVmStats `json:"workers_lua_vms"`
 }
-
-// Called by the plugin server at initialization.
-// func New(conn net.Conn) Node {
-// 	return Node{bridge{conn}}
-// }
 
 // kong.Node.GetId() returns the v4 UUID used by this node to describe itself.
 func (n Node) GetId() (string, error) {
@@ -54,9 +51,13 @@ func (n Node) GetMemoryStats() (MemoryStats, error) {
 	ms.LuaSharedDicts.KongDbCache.AllocatedSlabs = out.LuaSharedDicts.KongDbCache.AllocatedSlabs
 	ms.LuaSharedDicts.KongDbCache.Capacity = out.LuaSharedDicts.KongDbCache.Capacity
 
-// 	for i, wlv := range out.WorkersLuaVms {
-// 		// somewhow add elements to ms.WorkersLuaVms[]
-// 	}
+	ms.WorkersLuaVms = make([]workerLuaVmStats, len(out.WorkersLuaVms))
+	for i, wlv := range out.WorkersLuaVms {
+		ms.WorkersLuaVms[i] = workerLuaVmStats{
+			HttpAllocatedGc: wlv.HttpAllocatedGc,
+			Pid:             wlv.Pid,
+		}
+	}
 
 	return ms, nil
 }

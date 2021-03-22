@@ -6,20 +6,15 @@ A set of functions to retrieve information about the incoming requests made by c
 package request
 
 import (
+	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"google.golang.org/protobuf/types/known/structpb"
-	"github.com/Kong/go-pdk/bridge"
 )
 
 // Holds this module's functions.  Accessible as `kong.Request`
 type Request struct {
 	bridge.PdkBridge
 }
-
-// Called by the plugin server at initialization.
-// func New(ch chan interface{}) Request {
-// 	return Request{bridge.New(ch)}
-// }
 
 // kong.Request.GetScheme() returns the scheme component of the request’s URL.
 // The returned value is normalized to lower-case form.
@@ -152,7 +147,7 @@ func (r Request) GetQuery(max_args int) (map[string][]string, error) {
 		max_args = 100
 	}
 
-	arg := kong_plugin_protocol.Int{ V: int32(max_args) }
+	arg := kong_plugin_protocol.Int{V: int32(max_args)}
 	out := new(structpb.Struct)
 	err := r.Ask("kong.request.get_query", &arg, out)
 	if err != nil {
@@ -191,7 +186,7 @@ func (r Request) GetHeaders(max_headers int) (map[string][]string, error) {
 		max_headers = 100
 	}
 
-	arg := kong_plugin_protocol.Int{ V: int32(max_headers) }
+	arg := kong_plugin_protocol.Int{V: int32(max_headers)}
 	out := new(structpb.Struct)
 	err := r.Ask("kong.request.get_headers", &arg, out)
 	if err != nil {
