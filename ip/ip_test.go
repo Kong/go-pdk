@@ -4,26 +4,23 @@ import (
 	"testing"
 
 	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/bridge/bridgetest"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"github.com/stretchr/testify/assert"
 )
 
-var ip Ip
-var ch chan interface{}
-
-func init() {
-	ch = make(chan interface{})
-	ip = New(ch)
-}
-
-func getBack(f func()) interface{} {
-	go f()
-	d := <-ch
-	ch <- nil
-
-	return d
-}
-
 func TestIsTrusted(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.ip.is_trusted", Args: []interface{}{"1.1.1.1"}}, getBack(func() { ip.IsTrusted("1.1.1.1") }))
-	assert.Equal(t, bridge.StepData{Method: "kong.ip.is_trusted", Args: []interface{}{"1.0.0.1"}}, getBack(func() { ip.IsTrusted("1.0.0.1") }))
+	ip := Ip{bridge.New(bridgetest.Mock(t, []bridgetest.MockStep{
+		{"kong.ip.is_trusted", bridge.WrapString("1.1.1.1"), &kong_plugin_protocol.Bool{V: true}},
+		{"kong.ip.is_trusted", bridge.WrapString("1.0.0.1"), &kong_plugin_protocol.Bool{V: false}},
+	}))}
+
+	ret, err := ip.IsTrusted("1.1.1.1")
+	assert.NoError(t, err)
+	assert.True(t, ret)
+
+	ret, err = ip.IsTrusted("1.0.0.1")
+	assert.NoError(t, err)
+	assert.False(t, ret)
 }
+

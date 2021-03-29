@@ -32,6 +32,8 @@ package ctx
 
 import (
 	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // Holds this module's functions.  Accessible as `kong.Ctx`
@@ -41,7 +43,12 @@ type Ctx struct {
 
 // kong.Ctx.SetShared() sets a value in the `kong.ctx.shared` request context table.
 func (c Ctx) SetShared(k string, value interface{}) error {
-	err := c.Ask(`kong.ctx.shared.set`, bridge.WrapString(k), nil)
+	v, err := structpb.NewValue(value)
+	if err != nil {
+		return err
+	}
+
+	return c.Ask(`kong.ctx.shared.set`, &kong_plugin_protocol.KV{K: k, V: v}, nil)
 	return err
 }
 

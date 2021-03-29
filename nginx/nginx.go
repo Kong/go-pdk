@@ -43,17 +43,29 @@ func (n Nginx) GetCtxAny(k string) (interface{}, error) {
 
 // kong.Nginx.GetCtxString() returns a string value from the `ngx.ctx` request context table.
 func (n Nginx) GetCtxString(k string) (string, error) {
-	return n.AskString(`kong.nginx.get_ctx`, bridge.WrapString(k))
+	out := new(structpb.Value)
+	if err := n.Ask(`kong.nginx.get_ctx`, bridge.WrapString(k), out); err != nil {
+		return "", err
+	}
+	return out.GetStringValue(), nil
 }
 
 // kong.Nginx.GetCtxFloat() returns a float value from the `ngx.ctx` request context table.
 func (n Nginx) GetCtxFloat(k string) (float64, error) {
-	return n.AskNumber(`kong.nginx.get_ctx`, bridge.WrapString(k))
+	out := new(structpb.Value)
+	if err := n.Ask(`kong.nginx.get_ctx`, bridge.WrapString(k), out); err != nil {
+		return 0, err
+	}
+	return out.GetNumberValue(), nil
 }
 
 // kong.Nginx.GetCtxInt() returns an integer value from the `ngx.ctx` request context table.
 func (n Nginx) GetCtxInt(k string) (int, error) {
-	return n.AskInt(`kong.nginx.get_ctx`, bridge.WrapString(k))
+	out := new(structpb.Value)
+	if err := n.Ask(`kong.nginx.get_ctx`, bridge.WrapString(k), out); err != nil {
+		return 0, err
+	}
+	return int(out.GetNumberValue()), nil
 }
 
 // kong.Nginx.ReqStartTime() returns the curent request's start time

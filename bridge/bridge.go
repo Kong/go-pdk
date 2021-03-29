@@ -57,7 +57,9 @@ func writePbFrame(conn net.Conn, data []byte) (err error) {
 		return
 	}
 
-	_, err = conn.Write(data)
+	if len > 0 {
+		_, err = conn.Write(data)
+	}
 
 	return
 }
@@ -69,7 +71,11 @@ func WrapString(s string) *kong_plugin_protocol.String {
 func WrapHeaders(h map[string][]string) (*structpb.Struct, error) {
 	h2 := make(map[string]interface{}, len(h))
 	for k, v := range h {
-		h2[k] = v
+		l := make([]interface{}, len(v))
+		for i, v2 := range v {
+			l[i] = v2
+		}
+		h2[k] = l
 	}
 
 	st, err := structpb.NewStruct(h2)
@@ -89,6 +95,13 @@ func UnwrapHeaders(st *structpb.Struct) map[string][]string {
 			m2[k] = []string{v2}
 		case []string:
 			m2[k] = v2
+		case []interface{}:
+			m2[k] = make([]string, len(v2))
+			for i, v3 := range v2 {
+				if s, ok := v3.(string); ok {
+					m2[k][i] = s
+				}
+			}
 		default:
 			log.Printf("unexpected type %T on header %s:%v", v2, k, v2)
 		}

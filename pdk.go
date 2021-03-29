@@ -17,6 +17,7 @@ package pdk
 
 import (
 	"net"
+
 	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/client"
 	"github.com/Kong/go-pdk/ctx"

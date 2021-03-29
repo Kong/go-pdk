@@ -6,8 +6,6 @@ A set of functions to access the routing properties of the request.
 package router
 
 import (
-	"log"
-
 	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/entities"
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
@@ -27,7 +25,10 @@ func (c Router) GetRoute() (route entities.Route, err error) {
 		return
 	}
 
-	log.Printf("route: %v", out)
+	serviceId := ""
+	if out.Service != nil {
+		serviceId = out.Service.Id
+	}
 
 	route = entities.Route{
 		Id:                      out.Id,
@@ -47,7 +48,7 @@ func (c Router) GetRoute() (route entities.Route, err error) {
 		Sources:                 out.Sources,
 		Destinations:            out.Destinations,
 		Tags:                    out.Tags,
-		Service:                 entities.ServiceKey{Id: out.Service.Id},
+		Service:                 entities.ServiceKey{Id: serviceId},
 	}
 	return
 }
@@ -75,7 +76,7 @@ func (c Router) GetService() (service entities.Service, err error) {
 		WriteTimeout:      int(out.WriteTimeout),
 		ReadTimeout:       int(out.ReadTimeout),
 		Tags:              out.Tags,
-		ClientCertificate: entities.CertificateKey{Id: out.Id},
+// 		ClientCertificate: entities.CertificateKey{Id: out.ClientCertificate.Id},
 	}
 	return
 }
