@@ -48,7 +48,7 @@ func (c Client) GetForwardedIp() (string, error) {
 // That is, in cases when a load balancer is in front of Kong, this function
 // will return load balancer’s port, and not that of the downstream client.
 func (c Client) GetPort() (int, error) {
-	return c.AskInt(`kong.client.get_port`)
+	return c.AskInt(`kong.client.get_port`, nil)
 }
 
 // kong.Client.GetForwardedPort() returns the remote port of the client making the request.
@@ -60,7 +60,7 @@ func (c Client) GetPort() (int, error) {
 //   - real_ip_header
 //   - real_ip_recursive
 func (c Client) GetForwardedPort() (int, error) {
-	return c.AskInt(`kong.client.get_forwarded_port`)
+	return c.AskInt(`kong.client.get_forwarded_port`, nil)
 }
 
 // kong.Client.GetCredential() returns the credentials of the currently authenticated consumer.

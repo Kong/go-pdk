@@ -43,33 +43,21 @@ func TestGetForwardedIp(t *testing.T) {
 }
 
 func TestGetPort(t *testing.T) {
-<<<<<<< HEAD
-	assert.Equal(t, bridge.StepData{Method: "kong.client.get_port"}, getBack(func() { client.GetPort() }))
-	assert.Equal(t, 42, getIntValue(func(res chan int) { r, _ := client.GetPort(); res <- r }, 42))
-	assert.Equal(t, 0, getIntValue(func(res chan int) { r, _ := client.GetPort(); res <- r }, 0))
-}
-
-func TestGetForwardedPort(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.client.get_forwarded_port"}, getBack(func() { client.GetForwardedPort() }))
-	assert.Equal(t, 42, getIntValue(func(res chan int) { r, _ := client.GetForwardedPort(); res <- r }, 42))
-	assert.Equal(t, 0, getIntValue(func(res chan int) { r, _ := client.GetForwardedPort(); res <- r }, 0))
-=======
 	c := mockClient(t, []bridgetest.MockStep{
-		{"kong.client.get_port", nil, bridge.WrapString("443")},
+		{"kong.client.get_port", nil, &kong_plugin_protocol.Int{V: 443}},
 	})
 	resp, err := c.GetPort()
 	assert.NoError(t, err)
-	assert.Equal(t, resp, "443")
+	assert.Equal(t, 443, resp)
 }
 
 func TestGetForwardedPort(t *testing.T) {
 	c := mockClient(t, []bridgetest.MockStep{
-		{"kong.client.get_forwarded_port", nil, bridge.WrapString("80")},
+		{"kong.client.get_forwarded_port", nil, &kong_plugin_protocol.Int{V: 80}},
 	})
 	resp, err := c.GetForwardedPort()
 	assert.NoError(t, err)
-	assert.Equal(t, resp, "80")
->>>>>>> chore(tests) - new tests for new protocol
+	assert.Equal(t, 80, resp)
 }
 
 func TestGetCredential(t *testing.T) {
