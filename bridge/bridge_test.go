@@ -3,43 +3,38 @@ package bridge
 import (
 	"testing"
 
-	"github.com/Kong/go-pdk/entities"
-	"github.com/stretchr/testify/assert"
+	"github.com/Kong/go-pdk/bridge/bridgetest"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 )
 
-var ch chan interface{}
-var bridge PdkBridge
-
-func init() {
-	ch = make(chan interface{})
-	bridge = New(ch)
-}
 
 func TestAsk(t *testing.T) {
-	go func() {
-		bridge.Ask("foo.bar", 1, 2, 3, 1.23, false)
-	}()
+	b := New(bridgetest.Mock(t, []bridgetest.MockStep{
+		{"foo.bar", WrapString("first"), WrapString("resp")},
+	}))
 
-	call := <-ch
-	ch <- ""
 
-	assert.Equal(t, call, StepData{
-		Method: "foo.bar",
-		Args:   []interface{}{1, 2, 3, 1.23, false},
-	})
+	out := new(kong_plugin_protocol.String)
+	err := b.Ask("foo.bar", WrapString("first"), out)
+	if err != nil {
+		t.Fatalf("got this: %s", err)
+	}
+	if out.V != "resp" {
+		t.Fatalf("no 'resp': %v", out.V)
+	}
+	b.Close()
+}
 
-	go func() {
-		n := "gs"
-		bridge.Ask("foo.bar", entities.Consumer{Username: n})
-	}()
+func TestAskString(t *testing.T) {
+	b := New(bridgetest.Mock(t, []bridgetest.MockStep{
+		{"foo.bar", WrapString("first"), WrapString("resp")},
+	}))
 
-	call = <-ch
-	ch <- ""
-
-	n := "gs"
-	consumer := []interface{}{entities.Consumer{Username: n}}
-	assert.Equal(t, StepData{
-		Method: "foo.bar",
-		Args:   consumer,
-	}, call)
+	ret, err := b.AskString("foo.bar", WrapString("first"))
+	if err != nil {
+		t.Fatalf("got this: %s", err)
+	}
+	if ret != "resp" {
+		t.Fatalf("no 'resp': %v", ret)
+	}
 }

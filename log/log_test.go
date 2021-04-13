@@ -4,61 +4,44 @@ import (
 	"testing"
 
 	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/bridge/bridgetest"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
-var log Log
-var ch chan interface{}
-
-func init() {
-	ch = make(chan interface{})
-	log = New(ch)
+func mockLog(t *testing.T, s []bridgetest.MockStep) Log {
+	return Log{bridge.New(bridgetest.Mock(t, s))}
 }
 
-func getBack(f func()) interface{} {
-	go f()
-	d := <-ch
-	ch <- nil
+func TestMessages(t *testing.T) {
+	v, err := structpb.NewList([]interface{}{"Alo"})
+	assert.NoError(t, err)
 
-	return d
-}
+	log := mockLog(t, []bridgetest.MockStep{
+		{"kong.log.alert", v, nil},
+		{"kong.log.crit", v, nil},
+		{"kong.log.err", v, nil},
+		{"kong.log.warn", v, nil},
+		{"kong.log.notice", v, nil},
+		{"kong.log.info", v, nil},
+		{"kong.log.debug", v, nil},
+	})
 
-func getStrValue(f func(res chan string), val string) string {
-	res := make(chan string)
-	go f(res)
-	_ = <-ch
-	ch <- val
-	return <-res
-}
-
-func TestAlert(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.log.alert", Args: []interface{}{"Alo"}}, getBack(func() { log.Alert("Alo") }))
-}
-
-func TestCrit(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.log.crit", Args: []interface{}{"Alo"}}, getBack(func() { log.Crit("Alo") }))
-}
-
-func TestErr(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.log.err", Args: []interface{}{"Alo"}}, getBack(func() { log.Err("Alo") }))
-}
-
-func TestWarn(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.log.warn", Args: []interface{}{"Alo"}}, getBack(func() { log.Warn("Alo") }))
-}
-
-func TestNotice(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.log.notice", Args: []interface{}{"Alo"}}, getBack(func() { log.Notice("Alo") }))
-}
-
-func TestInfo(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.log.info", Args: []interface{}{"Alo"}}, getBack(func() { log.Info("Alo") }))
-}
-
-func TestDebug(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.log.debug", Args: []interface{}{"Alo"}}, getBack(func() { log.Debug("Alo") }))
+	assert.NoError(t, log.Alert("Alo"))
+	assert.NoError(t, log.Crit("Alo"))
+	assert.NoError(t, log.Err("Alo"))
+	assert.NoError(t, log.Warn("Alo"))
+	assert.NoError(t, log.Notice("Alo"))
+	assert.NoError(t, log.Info("Alo"))
+	assert.NoError(t, log.Debug("Alo"))
 }
 
 func TestSerialize(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.log.serialize"}, getBack(func() { log.Serialize() }))
+	log := mockLog(t, []bridgetest.MockStep{
+		{"kong.log.serialize", nil, bridge.WrapString("{data...}")},
+	})
+
+	ret, err := log.Serialize()
+	assert.NoError(t, err)
+	assert.Equal(t, "{data...}", ret)
 }

@@ -32,6 +32,8 @@ package ctx
 
 import (
 	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // Holds this module's functions.  Accessible as `kong.Ctx`
@@ -39,34 +41,49 @@ type Ctx struct {
 	bridge.PdkBridge
 }
 
-// Called by the plugin server at initialization.
-func New(ch chan interface{}) Ctx {
-	return Ctx{bridge.New(ch)}
-}
-
 // kong.Ctx.SetShared() sets a value in the `kong.ctx.shared` request context table.
 func (c Ctx) SetShared(k string, value interface{}) error {
-	_, err := c.Ask(`kong.ctx.shared.set`, k, value)
+	v, err := structpb.NewValue(value)
+	if err != nil {
+		return err
+	}
+
+	return c.Ask(`kong.ctx.shared.set`, &kong_plugin_protocol.KV{K: k, V: v}, nil)
 	return err
 }
 
 // kong.Ctx.GetSharedAny() returns a value from the `kong.ctx.shared` request context table.
 func (c Ctx) GetSharedAny(k string) (interface{}, error) {
-	return c.Ask(`kong.ctx.shared.get`, k)
+	return c.AskValue(`kong.ctx.shared.get`, bridge.WrapString(k))
 }
 
 // kong.Ctx.GetSharedString() returns a string value from the `kong.ctx.shared` request context table.
 func (c Ctx) GetSharedString(k string) (string, error) {
-	return c.AskString(`kong.ctx.shared.get`, k)
+	v, err := c.GetSharedAny(k)
+	if err != nil {
+		return "", err
+	}
+
+	s, ok := v.(string)
+	if ok {
+		return s, nil
+	}
+
+	return "", bridge.ReturnTypeError("string")
 }
 
 // kong.Ctx.GetSharedFloat() returns a float value from the `kong.ctx.shared` request context table.
 func (c Ctx) GetSharedFloat(k string) (float64, error) {
-	return c.AskFloat(`kong.ctx.shared.get`, k)
-}
+	v, err := c.GetSharedAny(k)
+	if err != nil {
+		return 0, err
+	}
 
-// kong.Ctx.GetSharedInt() returns an integer value from the `kong.ctx.shared` request context table.
-func (c Ctx) GetSharedInt(k string) (int, error) {
-	return c.AskInt(`kong.ctx.shared.get`, k)
+	f, ok := v.(float64)
+	if ok {
+		return f, nil
+	}
+
+	return 0, bridge.ReturnTypeError("number")
 }
 

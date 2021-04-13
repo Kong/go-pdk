@@ -9,10 +9,10 @@ import (
 )
 
 type rpcHandler struct {
-	constructor func() interface{}
-	configType  reflect.Type
-	version  string     // version number
-	priority int        // priority info
+	constructor       func() interface{}
+	configType        reflect.Type
+	version           string // version number
+	priority          int    // priority info
 	lock              sync.RWMutex
 	instances         map[int]*instanceData
 	nextInstanceId    int
@@ -63,10 +63,10 @@ func newRpcHandler(constructor func() interface{}, version string, priority int)
 	return &rpcHandler{
 		constructor: constructor,
 		configType:  reflect.TypeOf(constructor()),
-		version: version,
-		priority: priority,
-		instances: map[int]*instanceData{},
-		events:    map[int]*eventData{},
+		version:     version,
+		priority:    priority,
+		instances:   map[int]*instanceData{},
+		events:      map[int]*eventData{},
 	}
 }
 
@@ -166,7 +166,7 @@ func (rh rpcHandler) getInfo() (info pluginInfo, err error) {
 				{"config": getSchemaDict(rh.configType)},
 			},
 		},
-		Version: rh.version,
+		Version:  rh.version,
 		Priority: rh.priority,
 	}
 

@@ -4,29 +4,17 @@ import (
 	"testing"
 
 	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/bridge/bridgetest"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"github.com/stretchr/testify/assert"
 )
 
-var service Service
-var ch chan interface{}
+func TestService(t *testing.T) {
+	service := Service{bridge.New(bridgetest.Mock(t, []bridgetest.MockStep{
+		{"kong.service.set_upstream", bridge.WrapString("farm_4"), nil},
+		{"kong.service.set_target", &kong_plugin_protocol.Target{Host: "internal.server.lan", Port: 8443}, nil},
+	}))}
 
-func init() {
-	ch = make(chan interface{})
-	service = New(ch)
-}
-
-func getBack(f func()) interface{} {
-	go f()
-	d := <-ch
-	ch <- nil
-
-	return d
-}
-
-func TestSetUpstream(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.set_upstream", Args: []interface{}{"foo"}}, getBack(func() { service.SetUpstream("foo") }))
-}
-
-func TestSetTarget(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.set_target", Args: []interface{}{"foo", 1}}, getBack(func() { service.SetTarget("foo", 1) }))
+	assert.NoError(t, service.SetUpstream("farm_4"))
+	assert.NoError(t, service.SetTarget("internal.server.lan", 8443))
 }

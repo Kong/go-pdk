@@ -4,62 +4,59 @@ import (
 	"testing"
 
 	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/bridge/bridgetest"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
-var request Request
-var ch chan interface{}
+func TestServRequest(t *testing.T) {
+// 	q, err := bridge.WrapHeaders(map[string][]string{
+// 		"ref":   []string{"wayback"},
+// 		"trail": []string{"faint"},
+// 	})
+// 	assert.NoError(t, err)
+//
+// 	h, err := bridge.WrapHeaders(map[string][]string{
+// 		"Host":         []string{"example.com"},
+// 		"X-Two-Things": []string{"first", "second"},
+// 	})
+// 	assert.NoError(t, err)
 
-func init() {
-	ch = make(chan interface{})
-	request = New(ch)
-}
+	body := `GET / HTTP/1.1
+Host: example.com
+Accept: *
 
-func getBack(f func()) interface{} {
-	go f()
-	d := <-ch
-	ch <- nil
+this is the content`
 
-	return d
-}
+	request := Request{bridge.New(bridgetest.Mock(t, []bridgetest.MockStep{
+		{"kong.service.request.set_scheme", bridge.WrapString("https"), nil},
+		{"kong.service.request.set_path", bridge.WrapString("/login/orout"), nil},
+		{"kong.service.request.set_raw_query", bridge.WrapString("ref=wayback&trail=faint"), nil},
+		{"kong.service.request.set_method", bridge.WrapString("POST"), nil},
+// 		{"kong.service.request.set_query", q, nil},
+		{"kong.service.request.set_header", &kong_plugin_protocol.KV{K: "Host", V: structpb.NewStringValue("example.com")}, nil},
+		{"kong.service.request.add_header", &kong_plugin_protocol.KV{K: "Host", V: structpb.NewStringValue("example.com")}, nil},
+		{"kong.service.request.clear_header", bridge.WrapString("CORS"), nil},
+// 		{"kong.service.request.set_headers", bridge.WrapString(""), nil},
+		{"kong.service.request.set_raw_body", bridge.WrapString(body), nil},
+	}))}
 
-func TestSetScheme(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.request.set_scheme", Args: []interface{}{"http"}}, getBack(func() { request.SetScheme("http") }))
-}
+	assert.NoError(t, request.SetScheme("https"))
+	assert.NoError(t, request.SetPath("/login/orout"))
+	assert.NoError(t, request.SetRawQuery("ref=wayback&trail=faint"))
+	assert.NoError(t, request.SetMethod("POST"))
+// 	assert.NoError(t, request.SetQuery(map[string][]string{
+// 		"ref":   []string{"wayback"},
+// 		"trail": []string{"faint"},
+// 	}))
+	assert.NoError(t, request.SetHeader("Host", "example.com"))
+	assert.NoError(t, request.AddHeader("Host", "example.com"))
+	assert.NoError(t, request.ClearHeader("CORS"))
+// 	assert.NoError(t, request.SetHeaders(map[string][]string{
+// 		"Host":         []string{"example.com"},
+// 		"X-Two-Things": []string{"first", "second"},
+// 	}))
+	assert.NoError(t, request.SetRawBody(body))
 
-func TestSetPath(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.request.set_path", Args: []interface{}{"/foo"}}, getBack(func() { request.SetPath("/foo") }))
-}
-
-func TestSetRawQuery(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.request.set_raw_query", Args: []interface{}{"name=foo"}}, getBack(func() { request.SetRawQuery("name=foo") }))
-}
-
-func TestSetMethod(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.request.set_method", Args: []interface{}{"GET"}}, getBack(func() { request.SetMethod("GET") }))
-}
-
-func TestSetQuery(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.request.set_query", Args: []interface{}{map[string][]string{"foo": {"bar"}}}}, getBack(func() { request.SetQuery(map[string][]string{"foo": {"bar"}}) }))
-}
-
-func TestSetHeader(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.request.set_header", Args: []interface{}{"foo", "bar"}}, getBack(func() { request.SetHeader("foo", "bar") }))
-}
-
-func TestAddHeader(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.request.add_header", Args: []interface{}{"foo", "bar"}}, getBack(func() { request.AddHeader("foo", "bar") }))
-}
-
-func TestClearHeader(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.request.clear_header", Args: []interface{}{"foo"}}, getBack(func() { request.ClearHeader("foo") }))
-}
-
-func TestSetHeaders(t *testing.T) {
-	var h map[string][]string = nil
-	assert.Equal(t, bridge.StepData{Method: "kong.service.request.set_headers", Args: []interface{}{h}}, getBack(func() { request.SetHeaders(nil) }))
-}
-
-func TestSetRawBody(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.service.request.set_raw_body", Args: []interface{}{"foo"}}, getBack(func() { request.SetRawBody("foo") }))
 }

@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"github.com/Kong/go-pdk"
-	"time"
 )
 
 // Incoming data for a new event.
@@ -36,50 +35,50 @@ func (rh *rpcHandler) addEvent(event *eventData) {
 // mutated or holds references to mutable data.
 //
 // RPC exported method
-func (rh *rpcHandler) HandleEvent(in StartEventData, out *StepData) error {
-	rh.lock.RLock()
-	instance, ok := rh.instances[in.InstanceId]
-	rh.lock.RUnlock()
-	if !ok {
-		return fmt.Errorf("no plugin instance %d", in.InstanceId)
-	}
-
-	h, ok := instance.handlers[in.EventName]
-	if !ok {
-		return fmt.Errorf("undefined method %s", in.EventName)
-	}
-
-	ipc := make(chan interface{})
-
-	event := eventData{
-		instance: instance,
-		ipc:      ipc,
-		pdk:      pdk.Init(ipc),
-	}
-
-	rh.addEvent(&event)
-
-	//log.Printf("Will launch goroutine for key %d / operation %s\n", key, op)
-	go func() {
-		_ = <-ipc
-		h(event.pdk)
-
-		func() {
-			defer func() { recover() }()
-			ipc <- "ret"
-		}()
-
-		rh.lock.Lock()
-		defer rh.lock.Unlock()
-		event.instance.lastEventTime = time.Now()
-		delete(rh.events, event.id)
-	}()
-
-	ipc <- "run" // kickstart the handler
-
-	*out = StepData{EventId: event.id, Data: <-ipc}
-	return nil
-}
+// func (rh *rpcHandler) HandleEvent(in StartEventData, out *StepData) error {
+// 	rh.lock.RLock()
+// 	instance, ok := rh.instances[in.InstanceId]
+// 	rh.lock.RUnlock()
+// 	if !ok {
+// 		return fmt.Errorf("no plugin instance %d", in.InstanceId)
+// 	}
+//
+// 	h, ok := instance.handlers[in.EventName]
+// 	if !ok {
+// 		return fmt.Errorf("undefined method %s", in.EventName)
+// 	}
+//
+// 	ipc := make(chan interface{})
+//
+// 	event := eventData{
+// 		instance: instance,
+// 		ipc:      ipc,
+// 		pdk:      pdk.Init(ipc),
+// 	}
+//
+// 	rh.addEvent(&event)
+//
+// 	//log.Printf("Will launch goroutine for key %d / operation %s\n", key, op)
+// 	go func() {
+// 		_ = <-ipc
+// 		h(event.pdk)
+//
+// 		func() {
+// 			defer func() { recover() }()
+// 			ipc <- "ret"
+// 		}()
+//
+// 		rh.lock.Lock()
+// 		defer rh.lock.Unlock()
+// 		event.instance.lastEventTime = time.Now()
+// 		delete(rh.events, event.id)
+// 	}()
+//
+// 	ipc <- "run" // kickstart the handler
+//
+// 	*out = StepData{EventId: event.id, Data: <-ipc}
+// 	return nil
+// }
 
 // A callback's response/request.
 type StepData struct {

@@ -4,54 +4,56 @@ import (
 	"testing"
 
 	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/bridge/bridgetest"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
-var response Response
-var ch chan interface{}
-
-func init() {
-	ch = make(chan interface{})
-	response = New(ch)
+func mockResponse(t *testing.T, s []bridgetest.MockStep) Response {
+	return Response{bridge.New(bridgetest.Mock(t, s))}
 }
 
-func getBack(f func()) interface{} {
-	go f()
-	d := <-ch
-	ch <- nil
+func TestResponse(t *testing.T) {
+	h, err := bridge.WrapHeaders(map[string][]string{
+		"Host":   []string{"example.com"},
+		"X-Two-Things": []string{"first", "second"},
+	})
+	assert.NoError(t, err)
 
-	return d
-}
+	response := mockResponse(t, []bridgetest.MockStep{
+		{"kong.response.get_status", nil, &kong_plugin_protocol.Int{V: 404}},
+		{"kong.response.get_headers", &kong_plugin_protocol.Int{V: 30}, h},
+		{"kong.response.get_source", nil, bridge.WrapString("service")},
+		{"kong.response.set_status", &kong_plugin_protocol.Int{V: 201}, nil},
+		{"kong.response.set_header", &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, nil},
+		{"kong.response.add_header", &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, nil},
+		{"kong.response.clear_header", bridge.WrapString("key"), nil},
+		{"kong.response.set_headers", nil, nil},
+	})
 
-func TestGetStatus(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.response.get_status"}, getBack(func() { response.GetStatus() }))
-}
+	res_n, err := response.GetStatus()
+	assert.NoError(t, err)
+	assert.Equal(t, 404, res_n)
 
-func TestGetHeaders(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.response.get_headers", Args: []interface{}{1}}, getBack(func() { response.GetHeaders(1) }))
-}
+	res_h, err := response.GetHeaders(30)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string][]string{
+		"Host":   []string{"example.com"},
+		"X-Two-Things": []string{"first", "second"},
+	}, res_h)
 
-func TestGetSource(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.response.get_source"}, getBack(func() { response.GetSource() }))
-}
+	res_s, err := response.GetSource()
+	assert.NoError(t, err)
+	assert.Equal(t, "service", res_s)
 
-func TestSetStatus(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.response.get_status"}, getBack(func() { response.GetStatus() }))
-}
+	assert.NoError(t, response.SetStatus(201))
 
-func TestSetHeader(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.response.set_header", Args: []interface{}{"foo", "bar"}}, getBack(func() { response.SetHeader("foo", "bar") }))
-}
-
-func TestAddHeader(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.response.add_header", Args: []interface{}{"foo", "bar"}}, getBack(func() { response.AddHeader("foo", "bar") }))
-}
-
-func TestClearHeader(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.response.clear_header", Args: []interface{}{"foo"}}, getBack(func() { response.ClearHeader("foo") }))
-}
-
-func TestSetHeaders(t *testing.T) {
-	var m map[string][]string = nil
-	assert.Equal(t, bridge.StepData{Method: "kong.response.set_headers", Args: []interface{}{m}}, getBack(func() { response.SetHeaders(nil) }))
+	assert.NoError(t, response.SetHeader("key", "value"))
+	assert.NoError(t, response.AddHeader("key", "value"))
+	assert.NoError(t, response.ClearHeader("key"))
+	assert.NoError(t, response.SetHeaders(map[string][]string{
+		"Host":   []string{"example.com"},
+		"X-Two-Things": []string{"first", "second"},
+	}))
 }

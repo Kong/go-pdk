@@ -4,93 +4,121 @@ import (
 	"testing"
 
 	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/bridge/bridgetest"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"github.com/stretchr/testify/assert"
 )
 
-var request Request
-var ch chan interface{}
-
-func init() {
-	ch = make(chan interface{})
-	request = New(ch)
+func mockRequest(t *testing.T, s []bridgetest.MockStep) Request {
+	return Request{bridge.New(bridgetest.Mock(t, s))}
 }
 
-func getBack(f func()) interface{} {
-	go f()
-	d := <-ch
-	ch <- nil
+func TestGetInfos(t *testing.T) {
 
-	return d
-}
+	q, err := bridge.WrapHeaders(map[string][]string{
+		"ref":   []string{"wayback"},
+		"trail": []string{"faint"},
+	})
+	assert.NoError(t, err)
 
-func getStrValue(f func(res chan string), val string) string {
-	res := make(chan string)
-	go f(res)
-	_ = <-ch
-	ch <- val
-	return <-res
-}
+	h, err := bridge.WrapHeaders(map[string][]string{
+		"Host":         []string{"example.com"},
+		"X-Two-Things": []string{"first", "second"},
+	})
+	assert.NoError(t, err)
 
-func TestGetScheme(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_scheme"}, getBack(func() { request.GetScheme() }))
-}
+	body := `GET / HTTP/1.1
+Host: example.com
+Accept: *
 
-func TestGetHost(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_host"}, getBack(func() { request.GetHost() }))
-}
+this is the content`
 
-func TestGetPort(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_port"}, getBack(func() { request.GetPort() }))
-}
+	request := mockRequest(t, []bridgetest.MockStep{
+		{"kong.request.get_scheme", nil, bridge.WrapString("https")},
+		{"kong.request.get_host", nil, bridge.WrapString("example.com")},
+		{"kong.request.get_port", nil, &kong_plugin_protocol.Int{V: 443}},
+		{"kong.request.get_forwarded_scheme", nil, bridge.WrapString("https")},
+		{"kong.request.get_forwarded_host", nil, bridge.WrapString("example.com")},
+		{"kong.request.get_forwarded_port", nil, &kong_plugin_protocol.Int{V: 443}},
+		{"kong.request.get_http_version", nil, &kong_plugin_protocol.Number{V: 2.1}},
+		{"kong.request.get_method", nil, bridge.WrapString("HEADER")},
+		{"kong.request.get_path", nil, bridge.WrapString("/login/orout")},
+		{"kong.request.get_path_with_query", nil, bridge.WrapString("/login/orout?ref=wayback")},
+		{"kong.request.get_raw_query", nil, bridge.WrapString("ref=wayback&trail=faint")},
+		{"kong.request.get_query_arg", bridge.WrapString("ref"), bridge.WrapString("wayback")},
+		{"kong.request.get_query", &kong_plugin_protocol.Int{V: 30}, q},
+		{"kong.request.get_header", bridge.WrapString("Host"), bridge.WrapString("example.com")},
+		{"kong.request.get_headers", &kong_plugin_protocol.Int{V: 30}, h},
+		{"kong.request.get_raw_body", nil, bridge.WrapString(body)},
+	})
 
-func TestGetForwardedScheme(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_scheme"}, getBack(func() { request.GetScheme() }))
-}
+	ret, err := request.GetScheme()
+	assert.NoError(t, err)
+	assert.Equal(t, "https", ret)
 
-func TestGetForwardedHost(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_forwarded_host"}, getBack(func() { request.GetForwardedHost() }))
-}
+	ret, err = request.GetHost()
+	assert.NoError(t, err)
+	assert.Equal(t, "example.com", ret)
 
-func TestGetForwardedPort(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_forwarded_port"}, getBack(func() { request.GetForwardedPort() }))
-}
+	ret_i, err := request.GetPort()
+	assert.NoError(t, err)
+	assert.Equal(t, 443, ret_i)
 
-func TestGetHttpVersion(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_http_version"}, getBack(func() { request.GetHttpVersion() }))
-}
+	ret, err = request.GetForwardedScheme()
+	assert.NoError(t, err)
+	assert.Equal(t, "https", ret)
 
-func TestGetMethod(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_method"}, getBack(func() { request.GetMethod() }))
-}
+	ret, err = request.GetForwardedHost()
+	assert.NoError(t, err)
+	assert.Equal(t, "example.com", ret)
 
-func TestGetPath(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_path"}, getBack(func() { request.GetPath() }))
-}
+	ret_i, err = request.GetForwardedPort()
+	assert.NoError(t, err)
+	assert.Equal(t, 443, ret_i)
 
-func TestGetPathWithQuery(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_path_with_query"}, getBack(func() { request.GetPathWithQuery() }))
-}
+	ret_f, err := request.GetHttpVersion()
+	assert.NoError(t, err)
+	assert.Equal(t, 2.1, ret_f)
 
-func TestGetRawQuery(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_raw_query"}, getBack(func() { request.GetRawQuery() }))
-}
+	ret, err = request.GetMethod()
+	assert.NoError(t, err)
+	assert.Equal(t, "HEADER", ret)
 
-func TestGetQueryArg(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_query_arg", Args: []interface{}{"foo"}}, getBack(func() { request.GetQueryArg("foo") }))
-}
+	ret, err = request.GetPath()
+	assert.NoError(t, err)
+	assert.Equal(t, "/login/orout", ret)
 
-func TestGetQuery(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_query", Args: []interface{}{1}}, getBack(func() { request.GetQuery(1) }))
-}
+	ret, err = request.GetPathWithQuery()
+	assert.NoError(t, err)
+	assert.Equal(t, "/login/orout?ref=wayback", ret)
 
-func TestGetHeader(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_header", Args: []interface{}{"foo"}}, getBack(func() { request.GetHeader("foo") }))
-}
+	ret, err = request.GetRawQuery()
+	assert.NoError(t, err)
+	assert.Equal(t, "ref=wayback&trail=faint", ret)
 
-func TestGetHeaders(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_headers", Args: []interface{}{1}}, getBack(func() { request.GetHeaders(1) }))
-}
+	ret, err = request.GetQueryArg("ref")
+	assert.NoError(t, err)
+	assert.Equal(t, "wayback", ret)
 
-func TestGetRawBody(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.request.get_raw_body"}, getBack(func() { request.GetRawBody() }))
+	ret_q, err := request.GetQuery(30)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string][]string{
+		"ref":   []string{"wayback"},
+		"trail": []string{"faint"},
+	}, ret_q)
+
+	ret, err = request.GetHeader("Host")
+	assert.NoError(t, err)
+	assert.Equal(t, "example.com", ret)
+
+	ret_q, err = request.GetHeaders(30)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string][]string{
+		"Host":         []string{"example.com"},
+		"X-Two-Things": []string{"first", "second"},
+	}, ret_q)
+
+	ret, err = request.GetRawBody()
+	assert.NoError(t, err)
+	assert.Equal(t, body, ret)
 }
