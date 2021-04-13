@@ -32,6 +32,14 @@ func getStrValue(f func(res chan string), val string) string {
 	return <-res
 }
 
+func getIntValue(f func(res chan int), val int) int {
+	res := make(chan int)
+	go f(res)
+	_ = <-ch
+	ch <- val
+	return <-res
+}
+
 func TestGetIp(t *testing.T) {
 	assert.Equal(t, bridge.StepData{Method: "kong.client.get_ip"}, getBack(func() { client.GetIp() }))
 	assert.Equal(t, "foo", getStrValue(func(res chan string) { r, _ := client.GetIp(); res <- r }, "foo"))
@@ -46,14 +54,14 @@ func TestGetForwardedIp(t *testing.T) {
 
 func TestGetPort(t *testing.T) {
 	assert.Equal(t, bridge.StepData{Method: "kong.client.get_port"}, getBack(func() { client.GetPort() }))
-	assert.Equal(t, "foo", getStrValue(func(res chan string) { r, _ := client.GetPort(); res <- r }, "foo"))
-	assert.Equal(t, "", getStrValue(func(res chan string) { r, _ := client.GetPort(); res <- r }, ""))
+	assert.Equal(t, 42, getIntValue(func(res chan int) { r, _ := client.GetPort(); res <- r }, 42))
+	assert.Equal(t, 0, getIntValue(func(res chan int) { r, _ := client.GetPort(); res <- r }, 0))
 }
 
 func TestGetForwardedPort(t *testing.T) {
 	assert.Equal(t, bridge.StepData{Method: "kong.client.get_forwarded_port"}, getBack(func() { client.GetForwardedPort() }))
-	assert.Equal(t, getStrValue(func(res chan string) { r, _ := client.GetForwardedPort(); res <- r }, "foo"), "foo")
-	assert.Equal(t, getStrValue(func(res chan string) { r, _ := client.GetForwardedPort(); res <- r }, ""), "")
+	assert.Equal(t, 42, getIntValue(func(res chan int) { r, _ := client.GetForwardedPort(); res <- r }, 42))
+	assert.Equal(t, 0, getIntValue(func(res chan int) { r, _ := client.GetForwardedPort(); res <- r }, 0))
 }
 
 func TestGetCredential(t *testing.T) {
