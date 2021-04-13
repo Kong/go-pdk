@@ -14,14 +14,6 @@ func mockClient(t *testing.T, s []bridgetest.MockStep) Client {
 	return Client{bridge.New(bridgetest.Mock(t, s))}
 }
 
-func getIntValue(f func(res chan int), val int) int {
-	res := make(chan int)
-	go f(res)
-	_ = <-ch
-	ch <- val
-	return <-res
-}
-
 func TestGetIp(t *testing.T) {
 	c := mockClient(t, []bridgetest.MockStep{
 		{"kong.client.get_ip", nil, bridge.WrapString("10.10.10.1")},
