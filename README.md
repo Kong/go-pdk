@@ -1,3 +1,4 @@
+[![GoDoc](https://godoc.org/github.com/kong/go-pdk?status.svg)](https://godoc.org/github.com/kong/go-pdk)
 [![Build Status][badge-travis-image]][badge-travis-url]
 [![Go Report Card](https://goreportcard.com/badge/github.com/kong/go-pdk)](https://goreportcard.com/report/github.com/kong/go-pdk)
 
