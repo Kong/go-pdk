@@ -10,3 +10,7 @@ dep:
 .PHONY: test
 test:
 	go test -v -race ./...
+	
+.PHONY: coverage
+coverage:
+	go test -race -v -count=1 -coverprofile=coverage.out ./...	
