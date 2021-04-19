@@ -18,13 +18,13 @@ func TestMessages(t *testing.T) {
 	assert.NoError(t, err)
 
 	log := mockLog(t, []bridgetest.MockStep{
-		{"kong.log.alert", v, nil},
-		{"kong.log.crit", v, nil},
-		{"kong.log.err", v, nil},
-		{"kong.log.warn", v, nil},
-		{"kong.log.notice", v, nil},
-		{"kong.log.info", v, nil},
-		{"kong.log.debug", v, nil},
+		{Method: "kong.log.alert", Args: v, Ret: nil},
+		{Method: "kong.log.crit", Args: v, Ret: nil},
+		{Method: "kong.log.err", Args: v, Ret: nil},
+		{Method: "kong.log.warn", Args: v, Ret: nil},
+		{Method: "kong.log.notice", Args: v, Ret: nil},
+		{Method: "kong.log.info", Args: v, Ret: nil},
+		{Method: "kong.log.debug", Args: v, Ret: nil},
 	})
 
 	assert.NoError(t, log.Alert("Alo"))
@@ -38,7 +38,7 @@ func TestMessages(t *testing.T) {
 
 func TestSerialize(t *testing.T) {
 	log := mockLog(t, []bridgetest.MockStep{
-		{"kong.log.serialize", nil, bridge.WrapString("{data...}")},
+		{Method: "kong.log.serialize", Args: nil, Ret: bridge.WrapString("{data...}")},
 	})
 
 	ret, err := log.Serialize()

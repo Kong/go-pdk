@@ -16,20 +16,20 @@ func mockResponse(t *testing.T, s []bridgetest.MockStep) Response {
 
 func TestResponse(t *testing.T) {
 	h, err := bridge.WrapHeaders(map[string][]string{
-		"Host":   []string{"example.com"},
-		"X-Two-Things": []string{"first", "second"},
+		"Host":         {"example.com"},
+		"X-Two-Things": {"first", "second"},
 	})
 	assert.NoError(t, err)
 
 	response := mockResponse(t, []bridgetest.MockStep{
-		{"kong.response.get_status", nil, &kong_plugin_protocol.Int{V: 404}},
-		{"kong.response.get_headers", &kong_plugin_protocol.Int{V: 30}, h},
-		{"kong.response.get_source", nil, bridge.WrapString("service")},
-		{"kong.response.set_status", &kong_plugin_protocol.Int{V: 201}, nil},
-		{"kong.response.set_header", &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, nil},
-		{"kong.response.add_header", &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, nil},
-		{"kong.response.clear_header", bridge.WrapString("key"), nil},
-		{"kong.response.set_headers", nil, nil},
+		{Method: "kong.response.get_status", Args: nil, Ret: &kong_plugin_protocol.Int{V: 404}},
+		{Method: "kong.response.get_headers", Args: &kong_plugin_protocol.Int{V: 30}, Ret: h},
+		{Method: "kong.response.get_source", Args: nil, Ret: bridge.WrapString("service")},
+		{Method: "kong.response.set_status", Args: &kong_plugin_protocol.Int{V: 201}, Ret: nil},
+		{Method: "kong.response.set_header", Args: &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, Ret: nil},
+		{Method: "kong.response.add_header", Args: &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, Ret: nil},
+		{Method: "kong.response.clear_header", Args: bridge.WrapString("key"), Ret: nil},
+		{Method: "kong.response.set_headers", Args: nil, Ret: nil},
 	})
 
 	res_n, err := response.GetStatus()
@@ -39,8 +39,8 @@ func TestResponse(t *testing.T) {
 	res_h, err := response.GetHeaders(30)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string][]string{
-		"Host":   []string{"example.com"},
-		"X-Two-Things": []string{"first", "second"},
+		"Host":         {"example.com"},
+		"X-Two-Things": {"first", "second"},
 	}, res_h)
 
 	res_s, err := response.GetSource()
@@ -53,7 +53,7 @@ func TestResponse(t *testing.T) {
 	assert.NoError(t, response.AddHeader("key", "value"))
 	assert.NoError(t, response.ClearHeader("key"))
 	assert.NoError(t, response.SetHeaders(map[string][]string{
-		"Host":   []string{"example.com"},
-		"X-Two-Things": []string{"first", "second"},
+		"Host":         {"example.com"},
+		"X-Two-Things": {"first", "second"},
 	}))
 }

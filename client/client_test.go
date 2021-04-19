@@ -16,7 +16,7 @@ func mockClient(t *testing.T, s []bridgetest.MockStep) Client {
 
 func TestGetIp(t *testing.T) {
 	c := mockClient(t, []bridgetest.MockStep{
-		{"kong.client.get_ip", nil, bridge.WrapString("10.10.10.1")},
+		{Method: "kong.client.get_ip", Args: nil, Ret: bridge.WrapString("10.10.10.1")},
 	})
 
 	resp, err := c.GetIp()
@@ -26,7 +26,7 @@ func TestGetIp(t *testing.T) {
 
 func TestGetForwardedIp(t *testing.T) {
 	c := mockClient(t, []bridgetest.MockStep{
-		{"kong.client.get_forwarded_ip", nil, bridge.WrapString("10.10.10.1")},
+		{Method: "kong.client.get_forwarded_ip", Args: nil, Ret: bridge.WrapString("10.10.10.1")},
 	})
 
 	resp, err := c.GetForwardedIp()
@@ -36,7 +36,7 @@ func TestGetForwardedIp(t *testing.T) {
 
 func TestGetPort(t *testing.T) {
 	c := mockClient(t, []bridgetest.MockStep{
-		{"kong.client.get_port", nil, &kong_plugin_protocol.Int{V: 443}},
+		{Method: "kong.client.get_port", Args: nil, Ret: &kong_plugin_protocol.Int{V: 443}},
 	})
 	resp, err := c.GetPort()
 	assert.NoError(t, err)
@@ -45,7 +45,7 @@ func TestGetPort(t *testing.T) {
 
 func TestGetForwardedPort(t *testing.T) {
 	c := mockClient(t, []bridgetest.MockStep{
-		{"kong.client.get_forwarded_port", nil, &kong_plugin_protocol.Int{V: 80}},
+		{Method: "kong.client.get_forwarded_port", Args: nil, Ret: &kong_plugin_protocol.Int{V: 80}},
 	})
 	resp, err := c.GetForwardedPort()
 	assert.NoError(t, err)
@@ -54,9 +54,7 @@ func TestGetForwardedPort(t *testing.T) {
 
 func TestGetCredential(t *testing.T) {
 	c := mockClient(t, []bridgetest.MockStep{
-		{"kong.client.get_credential", nil,
-			&kong_plugin_protocol.AuthenticatedCredential{Id: "000:00", ConsumerId: "000:01"},
-		},
+		{Method: "kong.client.get_credential", Args: nil, Ret: &kong_plugin_protocol.AuthenticatedCredential{Id: "000:00", ConsumerId: "000:01"}},
 	})
 
 	resp, err := c.GetCredential()
@@ -66,10 +64,7 @@ func TestGetCredential(t *testing.T) {
 
 func TestLoadConsumer(t *testing.T) {
 	c := mockClient(t, []bridgetest.MockStep{
-		{"kong.client.load_consumer",
-			&kong_plugin_protocol.ConsumerSpec{Id: "001", ByUsername: false},
-			&kong_plugin_protocol.Consumer{Id: "001", Username: "Jon Doe"},
-		},
+		{Method: "kong.client.load_consumer", Args: &kong_plugin_protocol.ConsumerSpec{Id: "001", ByUsername: false}, Ret: &kong_plugin_protocol.Consumer{Id: "001", Username: "Jon Doe"}},
 	})
 	resp, err := c.LoadConsumer("001", false)
 	assert.NoError(t, err)

@@ -16,7 +16,7 @@ func mockNginx(t *testing.T, s []bridgetest.MockStep) Nginx {
 
 func TestGetVar(t *testing.T) {
 	nginx := mockNginx(t, []bridgetest.MockStep{
-		{"kong.nginx.get_var", bridge.WrapString("foo"), bridge.WrapString("bar")},
+		{Method: "kong.nginx.get_var", Args: bridge.WrapString("foo"), Ret: bridge.WrapString("bar")},
 	})
 
 	ret, err := nginx.GetVar("foo")
@@ -26,7 +26,7 @@ func TestGetVar(t *testing.T) {
 
 func TestGetTLS1VersionStr(t *testing.T) {
 	nginx := mockNginx(t, []bridgetest.MockStep{
-		{"kong.nginx.get_tls1_version_str", nil, bridge.WrapString("1.19")},
+		{Method: "kong.nginx.get_tls1_version_str", Args: nil, Ret: bridge.WrapString("1.19")},
 	})
 
 	ret, err := nginx.GetTLS1VersionStr()
@@ -36,11 +36,11 @@ func TestGetTLS1VersionStr(t *testing.T) {
 
 func TestCtx(t *testing.T) {
 	nginx := mockNginx(t, []bridgetest.MockStep{
-		{"kong.nginx.set_ctx", &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, nil},
-		{"kong.nginx.get_ctx", bridge.WrapString("key"), structpb.NewStringValue("value")},
-		{"kong.nginx.get_ctx", bridge.WrapString("key_s"), structpb.NewStringValue("value")},
-		{"kong.nginx.get_ctx", bridge.WrapString("key_n"), structpb.NewNumberValue(15.75)},
-		{"kong.nginx.get_ctx", bridge.WrapString("key_i"), structpb.NewNumberValue(15)},
+		{Method: "kong.nginx.set_ctx", Args: &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, Ret: nil},
+		{Method: "kong.nginx.get_ctx", Args: bridge.WrapString("key"), Ret: structpb.NewStringValue("value")},
+		{Method: "kong.nginx.get_ctx", Args: bridge.WrapString("key_s"), Ret: structpb.NewStringValue("value")},
+		{Method: "kong.nginx.get_ctx", Args: bridge.WrapString("key_n"), Ret: structpb.NewNumberValue(15.75)},
+		{Method: "kong.nginx.get_ctx", Args: bridge.WrapString("key_i"), Ret: structpb.NewNumberValue(15)},
 	})
 
 	assert.NoError(t, nginx.SetCtx("key", "value"))
@@ -64,7 +64,7 @@ func TestCtx(t *testing.T) {
 
 func TestReqStartTime(t *testing.T) {
 	nginx := mockNginx(t, []bridgetest.MockStep{
-		{"kong.nginx.req_start_time", nil, &kong_plugin_protocol.Number{V: 1617060050.0}},
+		{Method: "kong.nginx.req_start_time", Args: nil, Ret: &kong_plugin_protocol.Number{V: 1617060050.0}},
 	})
 
 	ret, err := nginx.ReqStartTime()
@@ -74,7 +74,7 @@ func TestReqStartTime(t *testing.T) {
 
 func TestGetSubsystem(t *testing.T) {
 	nginx := mockNginx(t, []bridgetest.MockStep{
-		{"kong.nginx.get_subsystem", nil, bridge.WrapString("http")},
+		{Method: "kong.nginx.get_subsystem", Args: nil, Ret: bridge.WrapString("http")},
 	})
 
 	ret, err := nginx.GetSubsystem()

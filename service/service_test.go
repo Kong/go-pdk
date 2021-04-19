@@ -11,8 +11,8 @@ import (
 
 func TestService(t *testing.T) {
 	service := Service{bridge.New(bridgetest.Mock(t, []bridgetest.MockStep{
-		{"kong.service.set_upstream", bridge.WrapString("farm_4"), nil},
-		{"kong.service.set_target", &kong_plugin_protocol.Target{Host: "internal.server.lan", Port: 8443}, nil},
+		{Method: "kong.service.set_upstream", Args: bridge.WrapString("farm_4"), Ret: nil},
+		{Method: "kong.service.set_target", Args: &kong_plugin_protocol.Target{Host: "internal.server.lan", Port: 8443}, Ret: nil},
 	}))}
 
 	assert.NoError(t, service.SetUpstream("farm_4"))

@@ -16,14 +16,14 @@ func mockRequest(t *testing.T, s []bridgetest.MockStep) Request {
 func TestGetInfos(t *testing.T) {
 
 	q, err := bridge.WrapHeaders(map[string][]string{
-		"ref":   []string{"wayback"},
-		"trail": []string{"faint"},
+		"ref":   {"wayback"},
+		"trail": {"faint"},
 	})
 	assert.NoError(t, err)
 
 	h, err := bridge.WrapHeaders(map[string][]string{
-		"Host":         []string{"example.com"},
-		"X-Two-Things": []string{"first", "second"},
+		"Host":         {"example.com"},
+		"X-Two-Things": {"first", "second"},
 	})
 	assert.NoError(t, err)
 
@@ -34,22 +34,22 @@ Accept: *
 this is the content`
 
 	request := mockRequest(t, []bridgetest.MockStep{
-		{"kong.request.get_scheme", nil, bridge.WrapString("https")},
-		{"kong.request.get_host", nil, bridge.WrapString("example.com")},
-		{"kong.request.get_port", nil, &kong_plugin_protocol.Int{V: 443}},
-		{"kong.request.get_forwarded_scheme", nil, bridge.WrapString("https")},
-		{"kong.request.get_forwarded_host", nil, bridge.WrapString("example.com")},
-		{"kong.request.get_forwarded_port", nil, &kong_plugin_protocol.Int{V: 443}},
-		{"kong.request.get_http_version", nil, &kong_plugin_protocol.Number{V: 2.1}},
-		{"kong.request.get_method", nil, bridge.WrapString("HEADER")},
-		{"kong.request.get_path", nil, bridge.WrapString("/login/orout")},
-		{"kong.request.get_path_with_query", nil, bridge.WrapString("/login/orout?ref=wayback")},
-		{"kong.request.get_raw_query", nil, bridge.WrapString("ref=wayback&trail=faint")},
-		{"kong.request.get_query_arg", bridge.WrapString("ref"), bridge.WrapString("wayback")},
-		{"kong.request.get_query", &kong_plugin_protocol.Int{V: 30}, q},
-		{"kong.request.get_header", bridge.WrapString("Host"), bridge.WrapString("example.com")},
-		{"kong.request.get_headers", &kong_plugin_protocol.Int{V: 30}, h},
-		{"kong.request.get_raw_body", nil, bridge.WrapString(body)},
+		{Method: "kong.request.get_scheme", Args: nil, Ret: bridge.WrapString("https")},
+		{Method: "kong.request.get_host", Args: nil, Ret: bridge.WrapString("example.com")},
+		{Method: "kong.request.get_port", Args: nil, Ret: &kong_plugin_protocol.Int{V: 443}},
+		{Method: "kong.request.get_forwarded_scheme", Args: nil, Ret: bridge.WrapString("https")},
+		{Method: "kong.request.get_forwarded_host", Args: nil, Ret: bridge.WrapString("example.com")},
+		{Method: "kong.request.get_forwarded_port", Args: nil, Ret: &kong_plugin_protocol.Int{V: 443}},
+		{Method: "kong.request.get_http_version", Args: nil, Ret: &kong_plugin_protocol.Number{V: 2.1}},
+		{Method: "kong.request.get_method", Args: nil, Ret: bridge.WrapString("HEADER")},
+		{Method: "kong.request.get_path", Args: nil, Ret: bridge.WrapString("/login/orout")},
+		{Method: "kong.request.get_path_with_query", Args: nil, Ret: bridge.WrapString("/login/orout?ref=wayback")},
+		{Method: "kong.request.get_raw_query", Args: nil, Ret: bridge.WrapString("ref=wayback&trail=faint")},
+		{Method: "kong.request.get_query_arg", Args: bridge.WrapString("ref"), Ret: bridge.WrapString("wayback")},
+		{Method: "kong.request.get_query", Args: &kong_plugin_protocol.Int{V: 30}, Ret: q},
+		{Method: "kong.request.get_header", Args: bridge.WrapString("Host"), Ret: bridge.WrapString("example.com")},
+		{Method: "kong.request.get_headers", Args: &kong_plugin_protocol.Int{V: 30}, Ret: h},
+		{Method: "kong.request.get_raw_body", Args: nil, Ret: bridge.WrapString(body)},
 	})
 
 	ret, err := request.GetScheme()
@@ -103,8 +103,8 @@ this is the content`
 	ret_q, err := request.GetQuery(30)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string][]string{
-		"ref":   []string{"wayback"},
-		"trail": []string{"faint"},
+		"ref":   {"wayback"},
+		"trail": {"faint"},
 	}, ret_q)
 
 	ret, err = request.GetHeader("Host")
@@ -114,8 +114,8 @@ this is the content`
 	ret_q, err = request.GetHeaders(30)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string][]string{
-		"Host":         []string{"example.com"},
-		"X-Two-Things": []string{"first", "second"},
+		"Host":         {"example.com"},
+		"X-Two-Things": {"first", "second"},
 	}, ret_q)
 
 	ret, err = request.GetRawBody()

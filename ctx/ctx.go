@@ -49,7 +49,6 @@ func (c Ctx) SetShared(k string, value interface{}) error {
 	}
 
 	return c.Ask(`kong.ctx.shared.set`, &kong_plugin_protocol.KV{K: k, V: v}, nil)
-	return err
 }
 
 // kong.Ctx.GetSharedAny() returns a value from the `kong.ctx.shared` request context table.
@@ -86,4 +85,3 @@ func (c Ctx) GetSharedFloat(k string) (float64, error) {
 
 	return 0, bridge.ReturnTypeError("number")
 }
-

@@ -16,7 +16,7 @@ func mockCtx(t *testing.T, s []bridgetest.MockStep) Ctx {
 
 func TestSetShared(t *testing.T) {
 	ctx := mockCtx(t, []bridgetest.MockStep{
-		{"kong.ctx.shared.set", &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, nil},
+		{Method: "kong.ctx.shared.set", Args: &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, Ret: nil},
 	})
 
 	assert.NoError(t, ctx.SetShared("key", "value"))
@@ -27,7 +27,7 @@ func TestGetSharedAny(t *testing.T) {
 	assert.NoError(t, err)
 
 	ctx := mockCtx(t, []bridgetest.MockStep{
-		{"kong.ctx.shared.get", bridge.WrapString("key"), v},
+		{Method: "kong.ctx.shared.get", Args: bridge.WrapString("key"), Ret: v},
 	})
 
 	val, err := ctx.GetSharedAny("key")
@@ -37,7 +37,7 @@ func TestGetSharedAny(t *testing.T) {
 
 func TestGetSharedString(t *testing.T) {
 	ctx := mockCtx(t, []bridgetest.MockStep{
-		{"kong.ctx.shared.get", bridge.WrapString("key"), structpb.NewStringValue("value")},
+		{Method: "kong.ctx.shared.get", Args: bridge.WrapString("key"), Ret: structpb.NewStringValue("value")},
 	})
 
 	val, err := ctx.GetSharedString("key")
@@ -47,7 +47,7 @@ func TestGetSharedString(t *testing.T) {
 
 func TestGetSharedFloat(t *testing.T) {
 	ctx := mockCtx(t, []bridgetest.MockStep{
-		{"kong.ctx.shared.get", bridge.WrapString("key"), structpb.NewNumberValue(2.74)},
+		{Method: "kong.ctx.shared.get", Args: bridge.WrapString("key"), Ret: structpb.NewNumberValue(2.74)},
 	})
 
 	val, err := ctx.GetSharedFloat("key")

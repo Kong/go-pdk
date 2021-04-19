@@ -53,17 +53,17 @@ type PDK struct {
 func Init(conn net.Conn) *PDK {
 	b := bridge.New(conn)
 	return &PDK{
-		Client:          client.Client{b},
-		Ctx:             ctx.Ctx{b},
-		Log:             log.Log{b},
-		Nginx:           nginx.Nginx{b},
-		Request:         request.Request{b},
-		Response:        response.Response{b},
-		Router:          router.Router{b},
-		IP:              ip.Ip{b},
-		Node:            node.Node{b},
-		Service:         service.Service{b},
-		ServiceRequest:  service_request.Request{b},
-		ServiceResponse: service_response.Response{b},
+		Client:          client.Client{PdkBridge: b},
+		Ctx:             ctx.Ctx{PdkBridge: b},
+		Log:             log.Log{PdkBridge: b},
+		Nginx:           nginx.Nginx{PdkBridge: b},
+		Request:         request.Request{PdkBridge: b},
+		Response:        response.Response{PdkBridge: b},
+		Router:          router.Router{PdkBridge: b},
+		IP:              ip.Ip{PdkBridge: b},
+		Node:            node.Node{PdkBridge: b},
+		Service:         service.Service{PdkBridge: b},
+		ServiceRequest:  service_request.Request{PdkBridge: b},
+		ServiceResponse: service_response.Response{PdkBridge: b},
 	}
 }
