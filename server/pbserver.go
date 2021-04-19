@@ -208,5 +208,4 @@ func StartServer(constructor func() interface{}, version string, priority int) e
 		go servePb(conn, rh)
 	}
 
-	return nil
 }
