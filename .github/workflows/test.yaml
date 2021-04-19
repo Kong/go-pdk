@@ -13,6 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Setup golangci-lint
+        continue-on-error: true
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.28.3
