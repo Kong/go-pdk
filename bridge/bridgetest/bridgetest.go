@@ -8,7 +8,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type MockStep struct {
