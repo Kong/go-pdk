@@ -177,7 +177,7 @@ func handlePbEvent(rh *rpcHandler, conn net.Conn, e *kong_plugin_protocol.CmdHan
 	pdk := pdk.Init(conn)
 
 	h(pdk)
-	writePbFrame(conn, []byte{})
+	_ = writePbFrame(conn, []byte{})
 
 	return nil
 }

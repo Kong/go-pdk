@@ -98,7 +98,7 @@ func Mock(t *testing.T, s []MockStep) net.Conn {
 					break
 				}
 			} else {
-				writePbFrame(conB, []byte{})
+				_ = writePbFrame(conB, []byte{})
 			}
 		}
 		conB.Close()
