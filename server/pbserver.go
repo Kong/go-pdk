@@ -10,7 +10,7 @@ import (
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func servePb(conn net.Conn, rh *rpcHandler) (err error) {
