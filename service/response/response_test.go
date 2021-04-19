@@ -11,8 +11,8 @@ import (
 
 func TestResponse(t *testing.T) {
 	h, err := bridge.WrapHeaders(map[string][]string{
-		"Host":   []string{"example.com"},
-		"X-Two-Things": []string{"first", "second"},
+		"Host":         {"example.com"},
+		"X-Two-Things": {"first", "second"},
 	})
 	assert.NoError(t, err)
 
@@ -23,10 +23,10 @@ Accept: *
 this is the content`
 
 	response := Response{bridge.New(bridgetest.Mock(t, []bridgetest.MockStep{
-		{"kong.service.response.get_status", nil, &kong_plugin_protocol.Int{V: 404}},
-		{"kong.service.response.get_header", bridge.WrapString("Host"), bridge.WrapString("example.com")},
-		{"kong.service.response.get_headers", &kong_plugin_protocol.Int{V: 30}, h},
-		{"kong.service.response.get_raw_body", nil, bridge.WrapString(body)},
+		{Method: "kong.service.response.get_status", Args: nil, Ret: &kong_plugin_protocol.Int{V: 404}},
+		{Method: "kong.service.response.get_header", Args: bridge.WrapString("Host"), Ret: bridge.WrapString("example.com")},
+		{Method: "kong.service.response.get_headers", Args: &kong_plugin_protocol.Int{V: 30}, Ret: h},
+		{Method: "kong.service.response.get_raw_body", Args: nil, Ret: bridge.WrapString(body)},
 	}))}
 
 	res_n, err := response.GetStatus()
@@ -40,8 +40,8 @@ this is the content`
 	res_h, err := response.GetHeaders(30)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string][]string{
-		"Host":   []string{"example.com"},
-		"X-Two-Things": []string{"first", "second"},
+		"Host":         {"example.com"},
+		"X-Two-Things": {"first", "second"},
 	}, res_h)
 
 	res_s, err = response.GetRawBody()
