@@ -13,7 +13,7 @@ type rpcHandler struct {
 	configType        reflect.Type
 	version           string // version number
 	priority          int    // priority info
-	lock              sync.RWMutex
+	lock              *sync.RWMutex
 	instances         map[int]*instanceData
 	nextInstanceId    int
 	events            map[int]*eventData
