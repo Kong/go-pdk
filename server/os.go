@@ -16,7 +16,7 @@ var (
 	help       = flag.Bool("help", false, "Show usage info")
 )
 
-func init() {
+func parseCli() {
 	flag.Parse()
 
 	if *help {
