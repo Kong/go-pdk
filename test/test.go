@@ -55,19 +55,31 @@ func (req Request) Validate() error {
 	return fmt.Errorf("Unsupported method \"%v\"", req.Method)
 }
 
+func (e clientEnv) noErr(err error) {
+	if err != nil {
+		e.t.Error(err)
+	}
+}
+
 func (e clientEnv) Errorf(format string, args ...interface{}) {
 	e.t.Errorf(format, args...)
 }
 
 func (e clientEnv) Handle(method string, args_d []byte) []byte {
 	switch method {
+	case "kong.request.get_headers":
+		{
+			out, err := bridge.WrapHeaders(e.req.Headers)
+			e.noErr(err)
+			out_d, err := proto.Marshal(out)
+			e.noErr(err)
+			return out_d
+		}
+
 	case "kong.response.set_header":
 		{
 			out := new(kong_plugin_protocol.KV)
-			err := proto.Unmarshal(args_d, out)
-			if err != nil {
-				e.t.Error(err)
-			}
+			e.noErr(proto.Unmarshal(args_d, out))
 			e.res.Headers[out.K] = []string{out.V.GetStringValue()}
 			return nil
 		}
