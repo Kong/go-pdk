@@ -154,30 +154,51 @@ func (e testEnv) Errorf(format string, args ...interface{}) {
 }
 
 func (e *testEnv) Handle(method string, args_d []byte) []byte {
+	var out proto.Message
+	var err error
+
 	switch method {
+
+	case "kong.client.get_ip", "kong.client.get_forwarded_ip":
+		out = bridge.WrapString("10.10.10.1")
+
+	case "kong.client.get_port", "kong.client.get_forwarded_port":
+		out = &kong_plugin_protocol.Int{V: 443}
+
 	case "kong.request.get_headers":
-		{
-			out, err := bridge.WrapHeaders(e.ClientReq.Headers)
-			e.noErr(err)
-			out_d, err := proto.Marshal(out)
-			e.noErr(err)
-			return out_d
-		}
+		out, err = bridge.WrapHeaders(e.ClientReq.Headers)
+
+	case "kong.client.get_credential":
+		out = &kong_plugin_protocol.AuthenticatedCredential{Id: "000:00", ConsumerId: "000:01"}
+
+	case "kong.client.load_consumer", "kong.client.get_consumer":
+		out = &kong_plugin_protocol.Consumer{Id: "001", Username: "Jon Doe"}
+
+	case "kong.client.authenticate":
+		// accept anything
+
+	case "kong.client.get_protocol":
+		out = bridge.WrapString("https")
 
 	case "kong.response.set_header":
 		{
-			out := new(kong_plugin_protocol.KV)
-			e.noErr(proto.Unmarshal(args_d, out))
-			e.ClientRes.Headers[out.K] = []string{out.V.GetStringValue()}
+			args := new(kong_plugin_protocol.KV)
+			e.noErr(proto.Unmarshal(args_d, args))
+			e.ClientRes.Headers[args.K] = []string{args.V.GetStringValue()}
 			return nil
 		}
 
 	default:
-		{
-			e.t.Errorf("unknown method: \"%v\"", method)
-			return nil
-		}
+		e.t.Errorf("unknown method: \"%v\"", method)
 	}
+
+	if out != nil {
+		e.noErr(err)
+		out_d, err := proto.Marshal(out)
+		e.noErr(err)
+		return out_d
+	}
+	return nil
 }
 
 func (e *testEnv) DoCertificate(config interface{}) {
@@ -225,7 +246,7 @@ func (e *testEnv) DoLog(config interface{}) {
 
 func (e *testEnv) DoHttp(config interface{}) {
 	e.DoAccess(config)
-	e.ServiceReq.ToResponse(&e.ServiceRes)		// assuming an "echo service"
+	e.ServiceReq.ToResponse(&e.ServiceRes) // assuming an "echo service"
 	e.DoResponse(config)
 	e.DoLog(config)
 }
