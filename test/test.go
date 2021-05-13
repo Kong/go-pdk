@@ -343,6 +343,103 @@ func (e *testEnv) Handle(method string, args_d []byte) []byte {
 			mergeHeaders(e.ClientRes.Headers, headers)
 		}
 
+	case "kong.router.get_route":
+		out = &kong_plugin_protocol.Route{
+			Id: "001:002",
+			Name: "route_66",
+			Protocols: []string{"http", "tcp"},
+			Paths: []string{"/v0/left", "/v1/this"},
+		}
+
+	case "kong.router.get_service":
+		out = &kong_plugin_protocol.Service{
+			Id: "003:004",
+			Name: "self_service",
+			Protocol: "http",
+			Path: "/v0/left",
+		}
+
+	case "kong.service.set_upstream", "kong.service.set_target":
+		// no visible effects yet
+
+	case "kong.service.request.set_scheme":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		u, err := url.Parse(e.ServiceReq.Url)
+		e.noErr(err)
+		u.Scheme = args.V
+		e.ServiceReq.Url = u.String()
+
+	case "kong.service.request.set_path":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		u, err := url.Parse(e.ServiceReq.Url)
+		e.noErr(err)
+		u.Path = args.V
+		e.ServiceReq.Url = u.String()
+
+	case "kong.service.request.set_raw_query":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		u, err := url.Parse(e.ServiceReq.Url)
+		e.noErr(err)
+		u.RawQuery = args.V
+		e.ServiceReq.Url = u.String()
+
+	case "kong.service.request.set_method":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.ServiceReq.Method = args.V
+
+	case "kong.service.request.set_query":
+		args := structpb.Struct{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		query := bridge.UnwrapHeaders(&args)
+		u, err := url.Parse(e.ServiceReq.Url)
+		e.noErr(err)
+		u.RawQuery = url.Values(query).Encode()
+		e.ServiceReq.Url = u.String()
+
+	case "kong.service.request.set_header":
+		args := kong_plugin_protocol.KV{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.ServiceReq.Headers.Set(args.K, args.V.GetStringValue())
+
+	case "kong.service.request.add_header":
+		args := kong_plugin_protocol.KV{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.ServiceReq.Headers.Add(args.K, args.V.GetStringValue())
+
+	case "kong.service.request.clear_header":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.ServiceReq.Headers.Del(args.V)
+
+	case "kong.service.request.set_headers":
+		args := structpb.Struct{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		headers := bridge.UnwrapHeaders(&args)
+		mergeHeaders(e.ServiceReq.Headers, headers)
+
+	case "kong.service.request.set_raw_body":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.ServiceRes.Body = args.V
+
+	case "kong.service.response.get_status":
+		out = &kong_plugin_protocol.Int{V: int32(e.ServiceRes.Status)}
+
+	case "kong.service.response.get_headers":
+		out, err = bridge.WrapHeaders(e.ServiceRes.Headers)
+
+	case "kong.service.response.get_header":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		out = bridge.WrapString(e.ServiceRes.Headers.Get(args.V))
+
+	case "kong.service.response.get_raw_body":
+		out = bridge.WrapString(e.ServiceRes.Body)
+
 	default:
 		e.t.Errorf("unknown method: \"%v\"", method)
 	}
