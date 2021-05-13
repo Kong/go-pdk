@@ -2,10 +2,11 @@ package test
 
 import (
 	"fmt"
-	"strings"
-	"testing"
+	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
+	"testing"
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/bridge"
@@ -28,33 +29,27 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-type headersMap map[string][]string
-
-func (h headersMap) cloneTo(out_h map[string][]string) {
-	for k, v := range h {
-		out_v := make([]string, len(v))
-		for i, sub_v := range v {
-			out_v[i] = sub_v
-		}
-		out_h[k] = out_v
-	}
-}
-func (h headersMap) clone() map[string][]string {
-	out_h := make(map[string][]string, len(h))
-	h.cloneTo(out_h)
-	return out_h
-}
-
 type Request struct {
 	Method  string
 	Url     string
-	Headers map[string][]string
+	Headers http.Header
 	Body    string
+}
+
+func (req Request) clone() Request {
+	return Request{
+		Method:  req.Method,
+		Url:     req.Url,
+		Headers: req.Headers.Clone(),
+		Body:    req.Body,
+	}
 }
 
 func (req Request) Validate() error {
 	_, err := url.Parse(req.Url)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	if req.Method == "GET" {
 		if req.Body != "" {
@@ -66,7 +61,6 @@ func (req Request) Validate() error {
 }
 
 func getPort(u *url.URL) int32 {
-// 	u, _ := url.Parse(req.Url)
 	p := u.Port()
 	if p == "" {
 		if u.Scheme == "https" {
@@ -79,47 +73,36 @@ func getPort(u *url.URL) int32 {
 }
 
 func (req Request) getForwardedUrl() (*url.URL, error) {
-	u := req.Url
-	if fwd, ok := req.Headers["X-Forwarded-Proto"]; ok {
-		u = fwd[0]
+	u := req.Headers.Get("X-Forwarded-Proto")
+	if u == "" {
+		u = req.Url
 	}
 	return url.Parse(u)
 }
 
-func (req Request) clone() Request {
-	return Request{
-		Method:  req.Method,
-		Url:     req.Url,
-		Headers: headersMap(req.Headers).clone(),
+func (req Request) ToResponse() Response {
+	return Response{
+		Status:  200,
+		Message: "OK",
+		Headers: req.Headers.Clone(),
 		Body:    req.Body,
 	}
-}
-
-func (req Request) ToResponse(res *Response) {
-	res.Status = 200
-	res.Message = "OK"
-	headersMap(req.Headers).cloneTo(res.Headers)
-	res.Body = req.Body
 }
 
 type Response struct {
 	Status  int
 	Message string
-	Headers map[string][]string
+	Headers http.Header
 	Body    string
 }
 
-func (res Response) cloneTo(out *Response) {
-	out.Status = res.Status
-	out.Message = res.Message
-	headersMap(res.Headers).cloneTo(out.Headers)
-	out.Body = res.Body
-}
-
 func (res Response) clone() Response {
-	out := Response{Headers: map[string][]string{}}
-	res.cloneTo(&out)
-	return out
+	return Response{
+		Status:  res.Status,
+		Message: res.Message,
+		Headers: res.Headers.Clone(),
+		Body:    res.Body,
+	}
 }
 
 type testEnv struct {
@@ -131,28 +114,21 @@ type testEnv struct {
 	ClientRes  Response
 }
 
-func New(t *testing.T, req Request) (env testEnv, err error) {
-	if req.Headers == nil {
-		req.Headers = map[string][]string{}
-	}
+func New(t *testing.T, req Request) (env *testEnv, err error) {
 	err = req.Validate()
 	if err != nil {
 		return
 	}
 
-	env = testEnv{
+	env = &testEnv{
 		t:          t,
 		ClientReq:  req,
 		ServiceReq: req.clone(),
-		ServiceRes: Response{
-			Headers: map[string][]string{},
-		},
-		ClientRes: Response{
-			Headers: map[string][]string{},
-		},
+		ServiceRes: Response{},
+		ClientRes:  Response{},
 	}
 
-	b := bridge.New(bridgetest.MockFunc(&env)) // check
+	b := bridge.New(bridgetest.MockFunc(env)) // check
 	env.pdk = &pdk.PDK{
 		Client:          client.Client{b},
 		Ctx:             ctx.Ctx{b},
@@ -168,6 +144,15 @@ func New(t *testing.T, req Request) (env testEnv, err error) {
 		ServiceResponse: service_response.Response{b},
 	}
 	return
+}
+
+func mergeHeaders(h http.Header, in map[string][]string) {
+	for k, l := range in {
+		h.Del(k)
+		for _, v := range l {
+			h.Add(k, v)
+		}
+	}
 }
 
 func (e testEnv) noErr(err error) {
@@ -300,10 +285,7 @@ func (e *testEnv) Handle(method string, args_d []byte) []byte {
 	case "kong.request.get_header":
 		args := kong_plugin_protocol.String{}
 		e.noErr(proto.Unmarshal(args_d, &args))
-		h, ok := e.ClientReq.Headers[args.V]
-		if ok {
-			out = bridge.WrapString(h[0])
-		}
+		out = bridge.WrapString(e.ClientReq.Headers.Get(args.V))
 
 	case "kong.request.get_raw_body":
 		out = bridge.WrapString(e.ClientReq.Body)
@@ -311,11 +293,55 @@ func (e *testEnv) Handle(method string, args_d []byte) []byte {
 	case "kong.request.get_headers":
 		out, err = bridge.WrapHeaders(e.ClientReq.Headers)
 
+	case "kong.response.get_status":
+		out = &kong_plugin_protocol.Int{V: int32(e.ClientRes.Status)}
+
+	case "kong.response.get_header":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		out = bridge.WrapString(e.ClientRes.Headers.Get(args.V))
+
+	case "kong.response.get_headers":
+		out, err = bridge.WrapHeaders(e.ClientRes.Headers)
+
+	case "kong.response.get_source":
+		out = bridge.WrapString("service")
+
+	case "kong.response.set_status":
+		args := kong_plugin_protocol.Int{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.ClientRes.Status = int(args.V)
+
 	case "kong.response.set_header":
-		args := new(kong_plugin_protocol.KV)
-		e.noErr(proto.Unmarshal(args_d, args))
-		e.ClientRes.Headers[args.K] = []string{args.V.GetStringValue()}
-		return nil
+		args := kong_plugin_protocol.KV{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.ClientRes.Headers.Set(args.K, args.V.GetStringValue())
+
+	case "kong.response.add_header":
+		args := kong_plugin_protocol.KV{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.ClientRes.Headers.Add(args.K, args.V.GetStringValue())
+
+	case "kong.response.clear_header":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.ClientRes.Headers.Del(args.V)
+
+	case "kong.response.set_headers":
+		args := structpb.Struct{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		headers := bridge.UnwrapHeaders(&args)
+		mergeHeaders(e.ClientRes.Headers, headers)
+
+	case "kong.response.exit":
+		args := kong_plugin_protocol.ExitArgs{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.ClientRes.Status = int(args.Status)
+		if args.Headers != nil {
+			e.ClientRes.Body = args.Body
+			headers := bridge.UnwrapHeaders(args.Headers)
+			mergeHeaders(e.ClientRes.Headers, headers)
+		}
 
 	default:
 		e.t.Errorf("unknown method: \"%v\"", method)
@@ -352,7 +378,7 @@ func (e *testEnv) DoAccess(config interface{}) {
 }
 
 func (e *testEnv) DoResponse(config interface{}) {
-	e.ServiceRes.cloneTo(&e.ClientRes)
+	e.ClientRes = e.ServiceRes.clone()
 	if h, ok := config.(interface{ Response(*pdk.PDK) }); ok {
 		e.t.Log("Response")
 		h.Response(e.pdk)
@@ -375,7 +401,7 @@ func (e *testEnv) DoLog(config interface{}) {
 
 func (e *testEnv) DoHttp(config interface{}) {
 	e.DoAccess(config)
-	e.ServiceReq.ToResponse(&e.ServiceRes) // assuming an "echo service"
+	e.ServiceRes = e.ServiceReq.ToResponse() // assuming an "echo service"
 	e.DoResponse(config)
 	e.DoLog(config)
 }
