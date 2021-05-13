@@ -2,7 +2,10 @@ package test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+	"net/url"
+	"strconv"
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/bridge"
@@ -22,7 +25,7 @@ import (
 
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"github.com/golang/protobuf/proto"
-	// 	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type headersMap map[string][]string
@@ -50,6 +53,9 @@ type Request struct {
 }
 
 func (req Request) Validate() error {
+	_, err := url.Parse(req.Url)
+	if err != nil { return err }
+
 	if req.Method == "GET" {
 		if req.Body != "" {
 			return fmt.Errorf("GET requests must not have body, found \"%v\"", req.Body)
@@ -57,6 +63,27 @@ func (req Request) Validate() error {
 		return nil
 	}
 	return fmt.Errorf("Unsupported method \"%v\"", req.Method)
+}
+
+func getPort(u *url.URL) int32 {
+// 	u, _ := url.Parse(req.Url)
+	p := u.Port()
+	if p == "" {
+		if u.Scheme == "https" {
+			return 443
+		}
+		return 80
+	}
+	portnum, _ := strconv.Atoi(p)
+	return int32(portnum)
+}
+
+func (req Request) getForwardedUrl() (*url.URL, error) {
+	u := req.Url
+	if fwd, ok := req.Headers["X-Forwarded-Proto"]; ok {
+		u = fwd[0]
+	}
+	return url.Parse(u)
 }
 
 func (req Request) clone() Request {
@@ -165,9 +192,6 @@ func (e *testEnv) Handle(method string, args_d []byte) []byte {
 	case "kong.client.get_port", "kong.client.get_forwarded_port":
 		out = &kong_plugin_protocol.Int{V: 443}
 
-	case "kong.request.get_headers":
-		out, err = bridge.WrapHeaders(e.ClientReq.Headers)
-
 	case "kong.client.get_credential":
 		out = &kong_plugin_protocol.AuthenticatedCredential{Id: "000:00", ConsumerId: "000:01"}
 
@@ -180,13 +204,118 @@ func (e *testEnv) Handle(method string, args_d []byte) []byte {
 	case "kong.client.get_protocol":
 		out = bridge.WrapString("https")
 
-	case "kong.response.set_header":
-		{
-			args := new(kong_plugin_protocol.KV)
-			e.noErr(proto.Unmarshal(args_d, args))
-			e.ClientRes.Headers[args.K] = []string{args.V.GetStringValue()}
-			return nil
+	case "kong.ip.is_trusted":
+		out = &kong_plugin_protocol.Bool{V: true}
+
+	case "kong.log.alert", "kong.log.crit", "kong.log.err", "kong.log.warn",
+		"kong.log.notice", "kong.log.info", "kong.log.debug":
+		args := new(structpb.ListValue)
+		e.noErr(proto.Unmarshal(args_d, args))
+		e.t.Logf("Log (%s): %v", method[strings.LastIndex(method, ".")+1:], args.AsSlice())
+
+	case "kong.node.get_id":
+		out = bridge.WrapString("a9777ac2-57e6-482b-a3c4-ef3d6ca41a1f")
+
+	case "kong.node.get_memory_stats":
+		out = &kong_plugin_protocol.MemoryStats{
+			LuaSharedDicts: &kong_plugin_protocol.MemoryStats_LuaSharedDicts{
+				Kong: &kong_plugin_protocol.MemoryStats_LuaSharedDicts_DictStats{
+					AllocatedSlabs: 1027,
+					Capacity:       4423543,
+				},
+				KongDbCache: &kong_plugin_protocol.MemoryStats_LuaSharedDicts_DictStats{
+					AllocatedSlabs: 4093,
+					Capacity:       3424875,
+				},
+			},
+			WorkersLuaVms: []*kong_plugin_protocol.MemoryStats_WorkerLuaVm{
+				{HttpAllocatedGc: 123456, Pid: 543},
+				{HttpAllocatedGc: 345678, Pid: 876},
+			},
 		}
+
+	case "kong.request.get_scheme":
+		u, err := url.Parse(e.ClientReq.Url)
+		e.noErr(err)
+		out = bridge.WrapString(u.Scheme)
+
+	case "kong.request.get_host":
+		u, err := url.Parse(e.ClientReq.Url)
+		e.noErr(err)
+		out = bridge.WrapString(u.Hostname())
+
+	case "kong.request.get_port":
+		u, err := url.Parse(e.ClientReq.Url)
+		e.noErr(err)
+		out = &kong_plugin_protocol.Int{V: getPort(u)}
+
+	case "kong.request.get_forwarded_scheme":
+		u, err := e.ClientReq.getForwardedUrl()
+		e.noErr(err)
+		out = bridge.WrapString(u.Scheme)
+
+	case "kong.request.get_forwarded_host":
+		u, err := e.ClientReq.getForwardedUrl()
+		e.noErr(err)
+		out = bridge.WrapString(u.Hostname())
+
+	case "kong.request.get_forwarded_port":
+		u, err := e.ClientReq.getForwardedUrl()
+		e.noErr(err)
+		out = &kong_plugin_protocol.Int{V: getPort(u)}
+
+	case "kong.request.get_http_version":
+		out = &kong_plugin_protocol.Number{V: 1.1}
+
+	case "kong.request.get_method":
+		out = bridge.WrapString(e.ClientReq.Method)
+
+	case "kong.request.get_path":
+		u, err := url.Parse(e.ClientReq.Url)
+		e.noErr(err)
+		out = bridge.WrapString(u.Path)
+
+	case "kong.request.get_path_with_query":
+		u, err := url.Parse(e.ClientReq.Url)
+		e.noErr(err)
+		out = bridge.WrapString(u.Path + "?" + u.RawQuery)
+
+	case "kong.request.get_raw_query":
+		u, err := url.Parse(e.ClientReq.Url)
+		e.noErr(err)
+		out = bridge.WrapString(u.RawQuery)
+
+	case "kong.request.get_query_arg":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		u, err := url.Parse(e.ClientReq.Url)
+		e.noErr(err)
+		out = bridge.WrapString(u.Query()[args.V][0])
+
+	case "kong.request.get_query":
+		u, err := url.Parse(e.ClientReq.Url)
+		e.noErr(err)
+		out, err = bridge.WrapHeaders(u.Query())
+
+	case "kong.request.get_header":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		h, ok := e.ClientReq.Headers[args.V]
+		if ok {
+			out = bridge.WrapString(h[0])
+		}
+
+	case "kong.request.get_raw_body":
+		out = bridge.WrapString(e.ClientReq.Body)
+
+	case "kong.request.get_headers":
+		out, err = bridge.WrapHeaders(e.ClientReq.Headers)
+
+	case "kong.response.set_header":
+		args := new(kong_plugin_protocol.KV)
+		e.noErr(proto.Unmarshal(args_d, args))
+		e.ClientRes.Headers[args.K] = []string{args.V.GetStringValue()}
+		return nil
 
 	default:
 		e.t.Errorf("unknown method: \"%v\"", method)
