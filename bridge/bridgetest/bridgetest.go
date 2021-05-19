@@ -105,3 +105,38 @@ func Mock(t *testing.T, s []MockStep) net.Conn {
 	}()
 	return conA
 }
+
+ type mockEnvironment interface{
+	Handle(method string, args_d []byte) []byte
+	Errorf(format string, args ...interface{})
+}
+
+func MockFunc(e mockEnvironment) net.Conn {
+	conA, conB := net.Pipe()
+
+	go func() {
+		for {
+			d, err := readPbFrame(conB)
+			if err != nil {
+				e.Errorf("Can't read method name")
+				break
+			}
+			method := string(d)
+
+			d, err = readPbFrame(conB)
+			if err != nil {
+				e.Errorf("Can't read method \"%v\" arguments", method)
+				break
+			}
+
+			d = e.Handle(method, d)
+
+			err = writePbFrame(conB, d)
+			if err != nil {
+				e.Errorf("Can't write back return values")
+				break
+			}
+		}
+	}()
+	return conA
+}
