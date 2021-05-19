@@ -45,11 +45,23 @@ func (req Request) clone() Request {
 	}
 }
 
-func (req Request) Validate() error {
+func mergeHeaders(h http.Header, in http.Header) http.Header {
+	for k, l := range in {
+		h.Del(k)
+		for _, v := range l {
+			h.Add(k, v)
+		}
+	}
+	return h
+}
+
+func (req *Request) Validate() error {
 	_, err := url.Parse(req.Url)
 	if err != nil {
 		return err
 	}
+
+	req.Headers = mergeHeaders(make(http.Header), req.Headers)
 
 	if req.Method == "GET" {
 		if req.Body != "" {
@@ -105,6 +117,25 @@ func (res Response) clone() Response {
 	}
 }
 
+func (res *Response) merge(other Response) {
+	if other.Status != 0 {
+		res.Status = other.Status
+	}
+	if other.Message != "" {
+		res.Message = other.Message
+	}
+	if other.Headers != nil {
+		if res.Headers != nil {
+			mergeHeaders(res.Headers, other.Headers)
+		} else {
+			res.Headers = other.Headers.Clone()
+		}
+	}
+	if other.Body != "" {
+		res.Body = other.Body
+	}
+}
+
 type testEnv struct {
 	t          *testing.T
 	pdk        *pdk.PDK
@@ -144,15 +175,6 @@ func New(t *testing.T, req Request) (env *testEnv, err error) {
 		ServiceResponse: service_response.Response{b},
 	}
 	return
-}
-
-func mergeHeaders(h http.Header, in map[string][]string) {
-	for k, l := range in {
-		h.Del(k)
-		for _, v := range l {
-			h.Add(k, v)
-		}
-	}
 }
 
 func (e testEnv) noErr(err error) {
@@ -235,19 +257,35 @@ func (e *testEnv) Handle(method string, args_d []byte) []byte {
 		out = &kong_plugin_protocol.Int{V: getPort(u)}
 
 	case "kong.request.get_forwarded_scheme":
-		u, err := e.ClientReq.getForwardedUrl()
-		e.noErr(err)
-		out = bridge.WrapString(u.Scheme)
+		scheme := e.ClientReq.Headers.Get("X-Forwarded-Proto")
+		if scheme == "" {
+			u, err := url.Parse(e.ClientReq.Url)
+			e.noErr(err)
+			scheme = u.Scheme
+		}
+		out = bridge.WrapString(scheme)
 
 	case "kong.request.get_forwarded_host":
-		u, err := e.ClientReq.getForwardedUrl()
-		e.noErr(err)
-		out = bridge.WrapString(u.Hostname())
+		host := e.ClientReq.Headers.Get("X-Forwarded-Host")
+		if host == "" {
+			u, err := url.Parse(e.ClientReq.Url)
+			e.noErr(err)
+			host = u.Hostname()
+		}
+		out = bridge.WrapString(host)
 
 	case "kong.request.get_forwarded_port":
-		u, err := e.ClientReq.getForwardedUrl()
-		e.noErr(err)
-		out = &kong_plugin_protocol.Int{V: getPort(u)}
+		port := e.ClientReq.Headers.Get("X-Forwarded-Port")
+		if port != "" {
+			p, err := strconv.Atoi(port)
+			e.noErr(err)
+			out = &kong_plugin_protocol.Int{V: int32(p)}
+		} else {
+			u, err := url.Parse(e.ClientReq.Url)
+			e.noErr(err)
+			out = &kong_plugin_protocol.Int{V: getPort(u)}
+		}
+
 
 	case "kong.request.get_http_version":
 		out = &kong_plugin_protocol.Number{V: 1.1}
@@ -345,18 +383,18 @@ func (e *testEnv) Handle(method string, args_d []byte) []byte {
 
 	case "kong.router.get_route":
 		out = &kong_plugin_protocol.Route{
-			Id: "001:002",
-			Name: "route_66",
+			Id:        "001:002",
+			Name:      "route_66",
 			Protocols: []string{"http", "tcp"},
-			Paths: []string{"/v0/left", "/v1/this"},
+			Paths:     []string{"/v0/left", "/v1/this"},
 		}
 
 	case "kong.router.get_service":
 		out = &kong_plugin_protocol.Service{
-			Id: "003:004",
-			Name: "self_service",
+			Id:       "003:004",
+			Name:     "self_service",
 			Protocol: "http",
-			Path: "/v0/left",
+			Path:     "/v0/left",
 		}
 
 	case "kong.service.set_upstream", "kong.service.set_target":
@@ -475,7 +513,7 @@ func (e *testEnv) DoAccess(config interface{}) {
 }
 
 func (e *testEnv) DoResponse(config interface{}) {
-	e.ClientRes = e.ServiceRes.clone()
+	e.ClientRes.merge(e.ServiceRes)
 	if h, ok := config.(interface{ Response(*pdk.PDK) }); ok {
 		e.t.Log("Response")
 		h.Response(e.pdk)
@@ -497,6 +535,7 @@ func (e *testEnv) DoLog(config interface{}) {
 }
 
 func (e *testEnv) DoHttp(config interface{}) {
+	e.DoRewrite(config)
 	e.DoAccess(config)
 	e.ServiceRes = e.ServiceReq.ToResponse() // assuming an "echo service"
 	e.DoResponse(config)
