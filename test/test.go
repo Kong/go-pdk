@@ -1,3 +1,46 @@
+/*
+Utilities to test plugins.
+
+Trivial example:
+
+	package main
+
+	import (
+		"testing"
+
+		"github.com/Kong/go-pdk/test"
+		"github.com/stretchr/testify/assert"
+	)
+
+	func TestPlugin(t *testing.T) {
+		env, err := test.New(t, test.Request{
+			Method: "GET",
+			Url:    "http://example.com?q=search&x=9",
+			Headers: map[string][]string{ "X-Hi": {"hello"}, },
+		})
+		assert.NoError(t, err)
+
+		env.DoHttps(&Config{})
+		assert.Equal(t, 200, env.ClientRes.Status)
+		assert.Equal(t, "Go says Hi!", env.ClientRes.Headers.Get("x-hello-from-go"))
+	}
+
+in short:
+
+1. Create a test environment passing a test.Request{} object to the test.New() function.
+
+2. Create a Config{} object (or the appropriate config structure of the plugin)
+
+3. env.DoHttps(t, &config) will pass the request object through the plugin, exercising
+each event handler and return (if there's no hard error) a simulated response object.
+There are other env.DoXXX(t, &config) functions for HTTP, TCP, TLS and individual phases.
+
+3.5 The http and https functions assume the service response will be an "echo" of the
+request (same body and headers) if you need a different service response, use the
+individual phase methods and set the env.ServiceRes object manually.
+
+4. Do assertions to verify the service request and client response are as expected.
+*/
 package test
 
 import (
@@ -29,6 +72,8 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+// The Request type represents the request received from the client
+// or the request sent to the service.
 type Request struct {
 	Method  string
 	Url     string
@@ -55,6 +100,8 @@ func mergeHeaders(h http.Header, in http.Header) http.Header {
 	return h
 }
 
+// Validate verifies a request and normalizes the headers.
+// (to make them case-insensitive)
 func (req *Request) Validate() error {
 	_, err := url.Parse(req.Url)
 	if err != nil {
@@ -92,6 +139,8 @@ func (req Request) getForwardedUrl() (*url.URL, error) {
 	return url.Parse(u)
 }
 
+// ToResponse creates a new Response object from a Request,
+// simulating an "echo" service.
 func (req Request) ToResponse() Response {
 	return Response{
 		Status:  200,
@@ -101,6 +150,8 @@ func (req Request) ToResponse() Response {
 	}
 }
 
+// The Response type represents the response returned from
+// the service or sent to the client.
 type Response struct {
 	Status  int
 	Message string
@@ -136,7 +187,7 @@ func (res *Response) merge(other Response) {
 	}
 }
 
-type testEnv struct {
+type TestEnv struct {
 	t          *testing.T
 	pdk        *pdk.PDK
 	ClientReq  Request
@@ -145,13 +196,14 @@ type testEnv struct {
 	ClientRes  Response
 }
 
-func New(t *testing.T, req Request) (env *testEnv, err error) {
+// New creates a new test environment.
+func New(t *testing.T, req Request) (env *TestEnv, err error) {
 	err = req.Validate()
 	if err != nil {
 		return
 	}
 
-	env = &testEnv{
+	env = &TestEnv{
 		t:          t,
 		ClientReq:  req,
 		ServiceReq: req.clone(),
@@ -177,17 +229,19 @@ func New(t *testing.T, req Request) (env *testEnv, err error) {
 	return
 }
 
-func (e testEnv) noErr(err error) {
+func (e TestEnv) noErr(err error) {
 	if err != nil {
 		e.t.Error(err)
 	}
 }
 
-func (e testEnv) Errorf(format string, args ...interface{}) {
+// Internal use.  Calls the Errof function with the test context.
+func (e TestEnv) Errorf(format string, args ...interface{}) {
 	e.t.Errorf(format, args...)
 }
 
-func (e *testEnv) Handle(method string, args_d []byte) []byte {
+// Internal use.  Handles a PDK request from the plugin under test.
+func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 	var out proto.Message
 	var err error
 
@@ -285,7 +339,6 @@ func (e *testEnv) Handle(method string, args_d []byte) []byte {
 			e.noErr(err)
 			out = &kong_plugin_protocol.Int{V: getPort(u)}
 		}
-
 
 	case "kong.request.get_http_version":
 		out = &kong_plugin_protocol.Number{V: 1.1}
@@ -491,28 +544,41 @@ func (e *testEnv) Handle(method string, args_d []byte) []byte {
 	return nil
 }
 
-func (e *testEnv) DoCertificate(config interface{}) {
+// DoCertificate tests the Certificate method of the plugin
+// with the Request in the test environment and the plugin
+// configuration passed in the argument.
+func (e *TestEnv) DoCertificate(config interface{}) {
 	if h, ok := config.(interface{ Certificate(*pdk.PDK) }); ok {
 		e.t.Log("Certificate")
 		h.Certificate(e.pdk)
 	}
 }
 
-func (e *testEnv) DoRewrite(config interface{}) {
+// DoRewrite tests the Rewrite method of the plugin
+// with the Request in the test environment and the plugin
+// configuration passed in the argument.
+func (e *TestEnv) DoRewrite(config interface{}) {
 	if h, ok := config.(interface{ Rewrite(*pdk.PDK) }); ok {
 		e.t.Log("Rewrite")
 		h.Rewrite(e.pdk)
 	}
 }
-
-func (e *testEnv) DoAccess(config interface{}) {
+// DoAccess tests the Access method of the plugin
+// with the Request in the test environment and the plugin
+// configuration passed in the argument.
+func (e *TestEnv) DoAccess(config interface{}) {
 	if h, ok := config.(interface{ Access(*pdk.PDK) }); ok {
 		e.t.Log("Access")
 		h.Access(e.pdk)
 	}
 }
 
-func (e *testEnv) DoResponse(config interface{}) {
+// DoAccess tests the Access method of the plugin
+// with the Request in the test environment and the plugin
+// configuration passed in the argument.
+// Before calling the plugin, the simulated client response is
+// updated with the service response, if any.
+func (e *TestEnv) DoResponse(config interface{}) {
 	e.ClientRes.merge(e.ServiceRes)
 	if h, ok := config.(interface{ Response(*pdk.PDK) }); ok {
 		e.t.Log("Response")
@@ -520,21 +586,33 @@ func (e *testEnv) DoResponse(config interface{}) {
 	}
 }
 
-func (e *testEnv) DoPreread(config interface{}) {
+// DoPreread tests the Preread method of a streaming plugin.
+func (e *TestEnv) DoPreread(config interface{}) {
 	if h, ok := config.(interface{ Preread(*pdk.PDK) }); ok {
 		e.t.Log("Preread")
 		h.Preread(e.pdk)
 	}
 }
 
-func (e *testEnv) DoLog(config interface{}) {
+// DoLog tests the Log method of the plugin
+// with the plugin configuration passed in the argument.
+func (e *TestEnv) DoLog(config interface{}) {
 	if h, ok := config.(interface{ Log(*pdk.PDK) }); ok {
 		e.t.Log("Log")
 		h.Log(e.pdk)
 	}
 }
 
-func (e *testEnv) DoHttp(config interface{}) {
+// DoHttp simulates an HTTP request/response cycle passing
+// through the Rewrite, Access, Response and Log methods
+// of the plugin.
+//
+// Between the Access and Response methods, a service response
+// is created from the service request (possibly modified by
+// the previous methods), simulating an "echo" service.
+// If you need a different kind of service, use the individual
+// methods (e.DoRewrite(), e.DoAccess(), e.DoResponse() and e.DoLog())
+func (e *TestEnv) DoHttp(config interface{}) {
 	e.DoRewrite(config)
 	e.DoAccess(config)
 	e.ServiceRes = e.ServiceReq.ToResponse() // assuming an "echo service"
@@ -542,17 +620,22 @@ func (e *testEnv) DoHttp(config interface{}) {
 	e.DoLog(config)
 }
 
-func (e *testEnv) DoHttps(config interface{}) {
+// DoHttps simulates an HTTPS request/response cycle passing
+// through the Certificate method and then all the same as the
+// DoHttp function.
+func (e *TestEnv) DoHttps(config interface{}) {
 	e.DoCertificate(config)
 	e.DoHttp(config)
 }
 
-func (e *testEnv) DoStream(config interface{}) {
+// DoStream simulates a TCP stream (for streaming plugins).
+func (e *TestEnv) DoStream(config interface{}) {
 	e.DoPreread(config)
 	e.DoLog(config)
 }
 
-func (e *testEnv) DoTLS(config interface{}) {
+// DoTLS simulates a TLS stream (for streaming plugins).
+func (e *TestEnv) DoTLS(config interface{}) {
 	e.DoCertificate(config)
 	e.DoStream(config)
 }
