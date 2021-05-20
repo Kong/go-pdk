@@ -573,7 +573,7 @@ func (e *TestEnv) DoAccess(config interface{}) {
 	}
 }
 
-// DoAccess tests the Access method of the plugin
+// DoResponse tests the Response method of the plugin
 // with the Request in the test environment and the plugin
 // configuration passed in the argument.
 // Before calling the plugin, the simulated client response is
