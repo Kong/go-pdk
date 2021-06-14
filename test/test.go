@@ -68,7 +68,7 @@ import (
 	service_response "github.com/Kong/go-pdk/service/response"
 
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -563,6 +563,7 @@ func (e *TestEnv) DoRewrite(config interface{}) {
 		h.Rewrite(e.pdk)
 	}
 }
+
 // DoAccess tests the Access method of the plugin
 // with the Request in the test environment and the plugin
 // configuration passed in the argument.
