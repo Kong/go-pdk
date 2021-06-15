@@ -187,8 +187,17 @@ func (res *Response) merge(other Response) {
 	}
 }
 
+type envState int
+
+const (
+	running envState = iota
+	finished
+	failed
+)
+
 type TestEnv struct {
 	t          *testing.T
+	state      envState
 	pdk        *pdk.PDK
 	ClientReq  Request
 	ServiceReq Request
@@ -205,6 +214,7 @@ func New(t *testing.T, req Request) (env *TestEnv, err error) {
 
 	env = &TestEnv{
 		t:          t,
+		state:      running,
 		ClientReq:  req,
 		ServiceReq: req.clone(),
 		ServiceRes: Response{},
@@ -213,18 +223,18 @@ func New(t *testing.T, req Request) (env *TestEnv, err error) {
 
 	b := bridge.New(bridgetest.MockFunc(env)) // check
 	env.pdk = &pdk.PDK{
-		Client:          client.Client{b},
-		Ctx:             ctx.Ctx{b},
-		Log:             log.Log{b},
-		Nginx:           nginx.Nginx{b},
-		Request:         request.Request{b},
-		Response:        response.Response{b},
-		Router:          router.Router{b},
-		IP:              ip.Ip{b},
-		Node:            node.Node{b},
-		Service:         service.Service{b},
-		ServiceRequest:  service_request.Request{b},
-		ServiceResponse: service_response.Response{b},
+		Client:          client.Client{PdkBridge: b},
+		Ctx:             ctx.Ctx{PdkBridge: b},
+		Log:             log.Log{PdkBridge: b},
+		Nginx:           nginx.Nginx{PdkBridge: b},
+		Request:         request.Request{PdkBridge: b},
+		Response:        response.Response{PdkBridge: b},
+		Router:          router.Router{PdkBridge: b},
+		IP:              ip.Ip{PdkBridge: b},
+		Node:            node.Node{PdkBridge: b},
+		Service:         service.Service{PdkBridge: b},
+		ServiceRequest:  service_request.Request{PdkBridge: b},
+		ServiceResponse: service_response.Response{PdkBridge: b},
 	}
 	return
 }
@@ -238,6 +248,10 @@ func (e TestEnv) noErr(err error) {
 // Internal use.  Calls the Errof function with the test context.
 func (e TestEnv) Errorf(format string, args ...interface{}) {
 	e.t.Errorf(format, args...)
+}
+
+func (e TestEnv) IsRunning() bool {
+	return e.state == running
 }
 
 // Internal use.  Handles a PDK request from the plugin under test.
@@ -429,6 +443,7 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		e.noErr(proto.Unmarshal(args_d, &args))
 		e.ClientRes.Status = int(args.Status)
 		if args.Headers != nil {
+			e.state = finished
 			e.ClientRes.Body = args.Body
 			headers := bridge.UnwrapHeaders(args.Headers)
 			mergeHeaders(e.ClientRes.Headers, headers)
@@ -548,6 +563,9 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 // with the Request in the test environment and the plugin
 // configuration passed in the argument.
 func (e *TestEnv) DoCertificate(config interface{}) {
+	if !e.IsRunning() {
+		return
+	}
 	if h, ok := config.(interface{ Certificate(*pdk.PDK) }); ok {
 		e.t.Log("Certificate")
 		h.Certificate(e.pdk)
@@ -558,15 +576,22 @@ func (e *TestEnv) DoCertificate(config interface{}) {
 // with the Request in the test environment and the plugin
 // configuration passed in the argument.
 func (e *TestEnv) DoRewrite(config interface{}) {
+	if !e.IsRunning() {
+		return
+	}
 	if h, ok := config.(interface{ Rewrite(*pdk.PDK) }); ok {
 		e.t.Log("Rewrite")
 		h.Rewrite(e.pdk)
 	}
 }
+
 // DoAccess tests the Access method of the plugin
 // with the Request in the test environment and the plugin
 // configuration passed in the argument.
 func (e *TestEnv) DoAccess(config interface{}) {
+	if !e.IsRunning() {
+		return
+	}
 	if h, ok := config.(interface{ Access(*pdk.PDK) }); ok {
 		e.t.Log("Access")
 		h.Access(e.pdk)
@@ -579,6 +604,9 @@ func (e *TestEnv) DoAccess(config interface{}) {
 // Before calling the plugin, the simulated client response is
 // updated with the service response, if any.
 func (e *TestEnv) DoResponse(config interface{}) {
+	if !e.IsRunning() {
+		return
+	}
 	e.ClientRes.merge(e.ServiceRes)
 	if h, ok := config.(interface{ Response(*pdk.PDK) }); ok {
 		e.t.Log("Response")
@@ -588,6 +616,9 @@ func (e *TestEnv) DoResponse(config interface{}) {
 
 // DoPreread tests the Preread method of a streaming plugin.
 func (e *TestEnv) DoPreread(config interface{}) {
+	if !e.IsRunning() {
+		return
+	}
 	if h, ok := config.(interface{ Preread(*pdk.PDK) }); ok {
 		e.t.Log("Preread")
 		h.Preread(e.pdk)
@@ -597,6 +628,9 @@ func (e *TestEnv) DoPreread(config interface{}) {
 // DoLog tests the Log method of the plugin
 // with the plugin configuration passed in the argument.
 func (e *TestEnv) DoLog(config interface{}) {
+	if !e.IsRunning() {
+		return
+	}
 	if h, ok := config.(interface{ Log(*pdk.PDK) }); ok {
 		e.t.Log("Log")
 		h.Log(e.pdk)
