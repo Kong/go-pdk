@@ -121,6 +121,10 @@ func getSchemaDict(t reflect.Type) schemaDict {
 		fieldsArray := []schemaDict{}
 		for i := 0; i < t.NumField(); i++ {
 			field := t.Field(i)
+			// ignore unexported fields
+			if len(field.PkgPath) != 0 {
+				continue
+			}
 			typeDecl := getSchemaDict(field.Type)
 			if typeDecl == nil {
 				// ignore unrepresentable types
