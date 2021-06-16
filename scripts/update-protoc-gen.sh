@@ -2,8 +2,7 @@
 
 go install google.golang.org/protobuf/cmd/protoc-gen-go
 TMP_DIR=$(mktemp -d)
-#trap "rm -rf $TMP_DIR" EXIT
-echo $TMP_DIR
+trap "rm -rf $TMP_DIR" EXIT
 
 curl -o $TMP_DIR/pluginsocket.proto https://raw.githubusercontent.com/Kong/kong/master/kong/pluginsocket.proto
 
