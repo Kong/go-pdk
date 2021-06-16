@@ -9,4 +9,4 @@ curl -o $TMP_DIR/pluginsocket.proto https://raw.githubusercontent.com/Kong/kong/
 
 protoc --go_out=$TMP_DIR --proto_path=$TMP_DIR pluginsocket.proto
 
-cp $TMP_DIR/kong_plugin_protocol/pluginsocket.pb.go server/kong_plugin_protocol/pluginsocket.pb.go
+diff -Naur $TMP_DIR/kong_plugin_protocol/pluginsocket.pb.go server/kong_plugin_protocol/pluginsocket.pb.go
