@@ -15,7 +15,7 @@ After making a change to to this file you can run the generators with:
 ./scripts/update-protoc-gen.sh
 ```
 
-To check if the `server/kong_plugin_protocol/pluginsocket.pb.go` is up-to-date you can run
+To check if the `server/kong_plugin_protocol/pluginsocket.pb.go` is up-to-date you can run:
 
 ```shell
 ./scripts/verify-protoc-gen.sh
