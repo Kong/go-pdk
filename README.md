@@ -9,7 +9,7 @@ Docs: https://pkg.go.dev/github.com/Kong/go-pdk.
 Some code in this repo such as `server/kong_plugin_protocol/pluginsocket.pb.go` is generated
 from `https://raw.githubusercontent.com/Kong/kong/master/kong/pluginsocket.proto`
 
-After making a change to to this file you can run the generators with:
+After making a change to this file you can run the generators with:
 
 ```shell
 ./scripts/update-protoc-gen.sh
