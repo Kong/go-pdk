@@ -217,8 +217,8 @@ func New(t *testing.T, req Request) (env *TestEnv, err error) {
 		state:      running,
 		ClientReq:  req,
 		ServiceReq: req.clone(),
-		ServiceRes: Response{},
-		ClientRes:  Response{},
+		ServiceRes: Response{Headers: make(http.Header)},
+		ClientRes:  Response{Headers: make(http.Header)},
 	}
 
 	b := bridge.New(bridgetest.MockFunc(env)) // check
