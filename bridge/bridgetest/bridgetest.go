@@ -109,6 +109,7 @@ func Mock(t *testing.T, s []MockStep) net.Conn {
 type mockEnvironment interface {
 	Handle(method string, args_d []byte) []byte
 	Errorf(format string, args ...interface{})
+	IsRunning() bool
 }
 
 func MockFunc(e mockEnvironment) net.Conn {
@@ -134,6 +135,10 @@ func MockFunc(e mockEnvironment) net.Conn {
 			err = writePbFrame(conB, d)
 			if err != nil {
 				e.Errorf("Can't write back return values")
+				break
+			}
+
+			if !e.IsRunning() {
 				break
 			}
 		}
