@@ -11,7 +11,8 @@ git:
 before_script:
   - sudo apt-get update
   - sudo apt-get install curl -y
-  - chmod +x ./scripts/*.sh
+  - chmod +x ./scripts/install-protoc.sh
+  - chmod +x ./scripts/verify-protoc-gen.sh
   - ./scripts/install-protoc.sh
   - go get -v -u golang.org/x/lint/golint
 
