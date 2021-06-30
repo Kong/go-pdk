@@ -9,9 +9,14 @@ git:
   depth: 1
 
 before_script:
+  - sudo apt-get update
+  - sudo apt-get install curl -y
+  - chmod +x ./scripts/*.sh
+  - ./scripts/install-protoc.sh
   - go get -v -u golang.org/x/lint/golint
 
 script:
   - make dep
   - make lint
+  - make verify-protoc-gen
   - make test
