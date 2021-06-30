@@ -119,7 +119,7 @@ func MockFunc(e mockEnvironment) net.Conn {
 		for {
 			d, err := readPbFrame(conB)
 			if err != nil {
-				e.Errorf("Can't read method name")
+				// Conn probably closed
 				break
 			}
 			method := string(d)
@@ -135,10 +135,6 @@ func MockFunc(e mockEnvironment) net.Conn {
 			err = writePbFrame(conB, d)
 			if err != nil {
 				e.Errorf("Can't write back return values")
-				break
-			}
-
-			if !e.IsRunning() {
 				break
 			}
 		}

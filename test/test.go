@@ -110,13 +110,17 @@ func (req *Request) Validate() error {
 
 	req.Headers = mergeHeaders(make(http.Header), req.Headers)
 
-	if req.Method == "GET" {
+	switch req.Method {
+	case "GET":
 		if req.Body != "" {
 			return fmt.Errorf("GET requests must not have body, found \"%v\"", req.Body)
 		}
 		return nil
+	case "POST":
+		return nil
+	default:
+		return fmt.Errorf("unsupported method \"%v\"", req.Method)
 	}
-	return fmt.Errorf("Unsupported method \"%v\"", req.Method)
 }
 
 func getPort(u *url.URL) int32 {
@@ -442,9 +446,9 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		args := kong_plugin_protocol.ExitArgs{}
 		e.noErr(proto.Unmarshal(args_d, &args))
 		e.ClientRes.Status = int(args.Status)
+		e.state = finished
+		e.ClientRes.Body = args.Body
 		if args.Headers != nil {
-			e.state = finished
-			e.ClientRes.Body = args.Body
 			headers := bridge.UnwrapHeaders(args.Headers)
 			mergeHeaders(e.ClientRes.Headers, headers)
 		}
