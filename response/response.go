@@ -219,7 +219,6 @@ func (r Response) SetHeaders(headers map[string][]string) error {
 //
 // Unless manually specified, this method will automatically set the
 // Content-Length header in the produced response for convenience.
-
 func (r Response) Exit(status int, body string, headers map[string][]string) {
 	h, _ := bridge.WrapHeaders(headers)
 	arg := kong_plugin_protocol.ExitArgs{
