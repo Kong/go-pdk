@@ -155,7 +155,7 @@ type pluginInfo struct {
 	Schema   schemaDict // representation of the config schema
 }
 
-func (rh rpcHandler) getInfo() (info pluginInfo, err error) {
+func (rh *rpcHandler) getInfo() (info pluginInfo, err error) {
 	name, err := getName()
 	if err != nil {
 		return

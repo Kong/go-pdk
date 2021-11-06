@@ -73,7 +73,7 @@ type serverInfo struct {
 	Plugins    []pluginInfo
 }
 
-func dumpInfo(rh rpcHandler) {
+func dumpInfo(rh *rpcHandler) {
 	info, err := rh.getInfo()
 	if err != nil {
 		log.Printf("getting plugin info: %s", err)
