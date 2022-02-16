@@ -118,7 +118,7 @@ this is the content`
 		"X-Two-Things": []string{"first", "second"},
 	}, ret_q)
 
-	ret, err = request.GetRawBody()
+	ret_b, err := request.GetRawBody()
 	assert.NoError(t, err)
-	assert.Equal(t, body, ret)
+	assert.Equal(t, []byte(body), ret_b)
 }

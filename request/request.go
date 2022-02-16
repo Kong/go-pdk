@@ -6,6 +6,9 @@ A set of functions to retrieve information about the incoming requests made by c
 package request
 
 import (
+	"errors"
+	"io/ioutil"
+
 	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -203,8 +206,26 @@ func (r Request) GetHeaders(max_headers int) (map[string][]string, error) {
 // If the size of the body is greater than the Nginx buffer size
 // (set by client_body_buffer_size), this function will fail
 // and return an error message explaining this limitation.
-func (r Request) GetRawBody() (string, error) {
-	return r.AskString(`kong.request.get_raw_body`, nil)
+func (r Request) GetRawBody() ([]byte, error) {
+	out := new(kong_plugin_protocol.RawBodyResult)
+	err := r.Ask(`kong.request.get_raw_body`, nil, out)
+	if err != nil {
+		return nil, err
+	}
+
+	switch x := out.Kind.(type) {
+		case *kong_plugin_protocol.RawBodyResult_Content:
+			return x.Content, nil
+
+		case *kong_plugin_protocol.RawBodyResult_BodyFilepath:
+			return ioutil.ReadFile(x.BodyFilepath)
+
+		case *kong_plugin_protocol.RawBodyResult_Error:
+			return nil, errors.New(x.Error)
+
+		default:
+			return out.GetContent(), nil
+	}
 }
 
 // TODO get_body
