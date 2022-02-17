@@ -78,7 +78,7 @@ func codecPb(rh *rpcHandler, conn net.Conn, data []byte) (retData []byte, err er
 		return
 	}
 
-	rm, err := handlePbCmd(rh, conn, m)
+	rm, err := handlePbCmd(rh, conn, &m)
 	if err != nil {
 		return
 	}
@@ -100,7 +100,7 @@ func pbInstanceStatus(status InstanceStatus) *kong_plugin_protocol.RpcReturn_Ins
 	}
 }
 
-func handlePbCmd(rh *rpcHandler, conn net.Conn, m kong_plugin_protocol.RpcCall) (rm *kong_plugin_protocol.RpcReturn, err error) {
+func handlePbCmd(rh *rpcHandler, conn net.Conn, m *kong_plugin_protocol.RpcCall) (rm *kong_plugin_protocol.RpcReturn, err error) {
 	switch c := m.Call.(type) {
 	case *kong_plugin_protocol.RpcCall_CmdGetPluginNames:
 		// 		log.Printf("GetPluginNames: %v", c)
@@ -191,7 +191,7 @@ func StartServer(constructor func() interface{}, version string, priority int) e
 	rh := newRpcHandler(constructor, version, priority)
 
 	if *dump {
-		dumpInfo(*rh)
+		dumpInfo(rh)
 		return nil
 	}
 
@@ -209,6 +209,4 @@ func StartServer(constructor func() interface{}, version string, priority int) e
 
 		go servePb(conn, rh)
 	}
-
-	return nil
 }
