@@ -13,5 +13,5 @@ before_script:
 
 script:
   - make dep
-    #- make lint
+  - make lint
   - make test
