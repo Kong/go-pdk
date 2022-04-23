@@ -15,5 +15,5 @@ before_script:
 script:
   - make dep
     #- make lint
-  - golangci-lint run -D deadcode -D errcheck -D unused -D typecheck
+  - golangci-lint run -D deadcode -D errcheck -D unused -D typecheck -D govet -D ineffassign -D varcheck
   - make test
