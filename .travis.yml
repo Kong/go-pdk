@@ -9,9 +9,10 @@ git:
   depth: 1
 
 before_script:
-  - go get -v -u golang.org/x/lint/golint
+  # - go get -v -u golang.org/x/lint/golint
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.45.2
 
 script:
   - make dep
-  # - make lint
+  - golangci-lint run
   - make test
