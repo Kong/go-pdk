@@ -98,7 +98,11 @@ func Mock(t *testing.T, s []MockStep) net.Conn {
 					break
 				}
 			} else {
-				writePbFrame(conB, []byte{})
+				err = writePbFrame(conB, []byte{})
+				if err != nil {
+					t.Errorf("step %d, writePbFrame(ret): %s", i, err)
+					break
+				}
 			}
 		}
 		conB.Close()

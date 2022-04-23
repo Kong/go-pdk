@@ -227,7 +227,7 @@ func (r Response) Exit(status int, body string, headers map[string][]string) {
 		Body:    body,
 		Headers: h,
 	}
-	r.Ask(`kong.response.exit`, &arg, nil)
+	err := r.Ask(`kong.response.exit`, &arg, nil)
 	r.Close()
 }
 
@@ -237,6 +237,6 @@ func (r Response) ExitStatus(status int) {
 	arg := kong_plugin_protocol.ExitArgs{
 		Status: int32(status),
 	}
-	r.Ask(`kong.response.exit`, &arg, nil)
+	err := r.Ask(`kong.response.exit`, &arg, nil)
 	r.Close()
 }

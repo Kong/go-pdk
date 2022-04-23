@@ -177,7 +177,10 @@ func handlePbEvent(rh *rpcHandler, conn net.Conn, e *kong_plugin_protocol.CmdHan
 	pdk := pdk.Init(conn)
 
 	h(pdk)
-	writePbFrame(conn, []byte{})
+	err = writePbFrame(conn, []byte{})
+	if err != nil {
+		return nil
+	}
 
 	return nil
 }
@@ -207,6 +210,9 @@ func StartServer(constructor func() interface{}, version string, priority int) e
 			log.Fatal(err)
 		}
 
-		go servePb(conn, rh)
+		err = go servePb(conn, rh)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }

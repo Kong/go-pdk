@@ -53,8 +53,8 @@ type PDK struct {
 func Init(conn net.Conn) *PDK {
 	b := bridge.New(conn)
 	return &PDK{
-		Client:          client.Client{b},
-		Ctx:             ctx.Ctx{b},
+		Client:client.Client{b},
+		Ctx:ctx.Ctx{b},
 		Log:             log.Log{b},
 		Nginx:           nginx.Nginx{b},
 		Request:         request.Request{b},
