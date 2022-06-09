@@ -131,14 +131,6 @@ func getPort(u *url.URL) int32 {
 	return int32(portnum)
 }
 
-func (req Request) getForwardedUrl() (*url.URL, error) {
-	u := req.Headers.Get("X-Forwarded-Proto")
-	if u == "" {
-		u = req.Url
-	}
-	return url.Parse(u)
-}
-
 // ToResponse creates a new Response object from a Request,
 // simulating an "echo" service.
 func (req Request) ToResponse() Response {
@@ -157,15 +149,6 @@ type Response struct {
 	Message string
 	Headers http.Header
 	Body    string
-}
-
-func (res Response) clone() Response {
-	return Response{
-		Status:  res.Status,
-		Message: res.Message,
-		Headers: res.Headers.Clone(),
-		Body:    res.Body,
-	}
 }
 
 func (res *Response) merge(other Response) {
@@ -192,7 +175,6 @@ type envState int
 const (
 	running envState = iota
 	finished
-	failed
 )
 
 type TestEnv struct {
@@ -386,6 +368,7 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		u, err := url.Parse(e.ClientReq.Url)
 		e.noErr(err)
 		out, err = bridge.WrapHeaders(u.Query())
+		e.noErr(err)
 
 	case "kong.request.get_header":
 		args := kong_plugin_protocol.String{}

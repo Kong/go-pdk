@@ -11,8 +11,16 @@ import (
 
 func TestIsTrusted(t *testing.T) {
 	ip := Ip{bridge.New(bridgetest.Mock(t, []bridgetest.MockStep{
-		{"kong.ip.is_trusted", bridge.WrapString("1.1.1.1"), &kong_plugin_protocol.Bool{V: true}},
-		{"kong.ip.is_trusted", bridge.WrapString("1.0.0.1"), &kong_plugin_protocol.Bool{V: false}},
+		{
+			Method: "kong.ip.is_trusted",
+			Args:   bridge.WrapString("1.1.1.1"),
+			Ret:    &kong_plugin_protocol.Bool{V: true},
+		},
+		{
+			Method: "kong.ip.is_trusted",
+			Args:   bridge.WrapString("1.0.0.1"),
+			Ret:    &kong_plugin_protocol.Bool{V: false},
+		},
 	}))}
 
 	ret, err := ip.IsTrusted("1.1.1.1")
@@ -23,4 +31,3 @@ func TestIsTrusted(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, ret)
 }
-

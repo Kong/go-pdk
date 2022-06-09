@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -13,14 +12,16 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func servePb(conn net.Conn, rh *rpcHandler) (err error) {
+func servePb(conn net.Conn, rh *rpcHandler) {
+	var err error
+	var d, rd []byte
 	for {
-		d, err := readPbFrame(conn)
+		d, err = readPbFrame(conn)
 		if err != nil {
 			break
 		}
 
-		rd, err := codecPb(rh, conn, d)
+		rd, err = codecPb(rh, conn, d)
 		if err != nil {
 			break
 		}
@@ -35,8 +36,6 @@ func servePb(conn net.Conn, rh *rpcHandler) (err error) {
 	if err != nil {
 		log.Print(err)
 	}
-
-	return
 }
 
 func readPbFrame(conn net.Conn) (data []byte, err error) {
@@ -47,9 +46,6 @@ func readPbFrame(conn net.Conn) (data []byte, err error) {
 	}
 
 	data = make([]byte, len)
-	if data == nil {
-		return nil, errors.New("no memory")
-	}
 
 	_, err = io.ReadFull(conn, data)
 	if err != nil {
@@ -177,9 +173,7 @@ func handlePbEvent(rh *rpcHandler, conn net.Conn, e *kong_plugin_protocol.CmdHan
 	pdk := pdk.Init(conn)
 
 	h(pdk)
-	writePbFrame(conn, []byte{})
-
-	return nil
+	return writePbFrame(conn, []byte{})
 }
 
 // Start the embedded plugin server, ProtoBuf version.

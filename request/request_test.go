@@ -16,14 +16,14 @@ func mockRequest(t *testing.T, s []bridgetest.MockStep) Request {
 func TestGetInfos(t *testing.T) {
 
 	q, err := bridge.WrapHeaders(map[string][]string{
-		"ref":   []string{"wayback"},
-		"trail": []string{"faint"},
+		"ref":   {"wayback"},
+		"trail": {"faint"},
 	})
 	assert.NoError(t, err)
 
 	h, err := bridge.WrapHeaders(map[string][]string{
-		"Host":         []string{"example.com"},
-		"X-Two-Things": []string{"first", "second"},
+		"Host":         {"example.com"},
+		"X-Two-Things": {"first", "second"},
 	})
 	assert.NoError(t, err)
 

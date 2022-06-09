@@ -1,7 +1,7 @@
 
 .PHONY: lint
 lint:
-	golint
+	golangci-lint run --exclude composites
 
 .PHONY: dep
 dep:
