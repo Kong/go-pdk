@@ -17,8 +17,6 @@ type rpcHandler struct {
 	instances         map[int]*instanceData
 	nextInstanceId    int
 	events            map[int]*eventData
-	nextEventId       int
-	lastStartInstance time.Time
 	lastCloseInstance time.Time
 }
 

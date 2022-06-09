@@ -38,9 +38,6 @@ func readPbFrame(conn net.Conn) (data []byte, err error) {
 	}
 
 	data = make([]byte, len)
-	if data == nil {
-		return nil, errors.New("no memory")
-	}
 
 	_, err = io.ReadFull(conn, data)
 	if err != nil {
