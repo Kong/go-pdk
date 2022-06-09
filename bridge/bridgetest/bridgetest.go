@@ -8,7 +8,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type MockStep struct {
@@ -106,7 +106,7 @@ func Mock(t *testing.T, s []MockStep) net.Conn {
 	return conA
 }
 
- type mockEnvironment interface{
+type mockEnvironment interface {
 	Handle(method string, args_d []byte) []byte
 	Errorf(format string, args ...interface{})
 	IsRunning() bool
