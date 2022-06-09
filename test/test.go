@@ -68,7 +68,7 @@ import (
 	service_response "github.com/Kong/go-pdk/service/response"
 
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
