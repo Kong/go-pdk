@@ -5,6 +5,7 @@ lint:
 
 .PHONY: dep
 dep:
+	go get -v
 	go mod tidy
 
 .PHONY: test
