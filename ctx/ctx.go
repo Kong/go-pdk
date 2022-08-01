@@ -16,7 +16,7 @@ Usage:
 
 // plugin A PluginA.go
 func (conf Config) Access(kong *pdk.PDK) {
-	err := kong.Ctx.SetShared("hello world")
+	err := kong.Ctx.SetShared("foo", "hello world")
 	if err != nil {
 		kong.Log.Err(err)
 		return
