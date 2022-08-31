@@ -110,7 +110,7 @@ func handlePbCmd(rh *rpcHandler, conn net.Conn, m *kong_plugin_protocol.RpcCall)
 			Config: c.CmdStartInstance.Config,
 		}
 		var status InstanceStatus
-		err = rh.StartInstance(config, &status)
+		err = rh.StartInstance(config, &status, conn)
 		if err != nil {
 			return
 		}

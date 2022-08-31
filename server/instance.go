@@ -6,6 +6,7 @@ import (
 	"github.com/Kong/go-pdk"
 	"log"
 	"time"
+	"net"
 )
 
 type instanceData struct {
@@ -61,12 +62,16 @@ type InstanceStatus struct {
 	StartTime int64
 }
 
+type (
+	initializer interface{ Init(*pdk.PDK) error }
+)
+
 // StartInstance starts a plugin instance, as required by configuration data.  More than
 // one instance can be started for a single plugin.  If the configuration changes,
 // a new instance should be started and the old one closed.
 //
 // RPC exported method
-func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus) error {
+func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus, conn net.Conn) error {
 	// TODO: check if config.Name is the one we care
 
 	instanceConfig := rh.constructor()
@@ -79,6 +84,13 @@ func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus)
 		startTime: time.Now(),
 		config:    instanceConfig,
 		handlers:  getHandlers(instanceConfig),
+	}
+
+	if h, ok := instanceConfig.(initializer); ok {
+		pdk := pdk.Init(conn)
+		if err := h.Init(pdk); err != nil {
+			return fmt.Errorf("Initialization has failed: %w", err)
+		}
 	}
 
 // 	log.Printf("instance: %v", instance)
