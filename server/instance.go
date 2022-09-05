@@ -6,7 +6,6 @@ import (
 	"github.com/Kong/go-pdk"
 	"log"
 	"time"
-	"net"
 )
 
 type instanceData struct {
@@ -63,7 +62,8 @@ type InstanceStatus struct {
 }
 
 type (
-	initializer interface{ Init(*pdk.PDK) error }
+	initializer interface{ Init() error }
+	closer interface{ Close() error }
 )
 
 // StartInstance starts a plugin instance, as required by configuration data.  More than
@@ -71,7 +71,7 @@ type (
 // a new instance should be started and the old one closed.
 //
 // RPC exported method
-func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus, conn net.Conn) error {
+func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus) error {
 	// TODO: check if config.Name is the one we care
 
 	instanceConfig := rh.constructor()
@@ -80,20 +80,19 @@ func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus,
 		return fmt.Errorf("decoding config: %w", err)
 	}
 
+	if h, ok := instanceConfig.(initializer); ok {
+		if err := h.Init(); err != nil {
+			return fmt.Errorf("Initialization has failed: %w", err)
+		}
+	}
+
 	instance := instanceData{
 		startTime: time.Now(),
 		config:    instanceConfig,
 		handlers:  getHandlers(instanceConfig),
 	}
 
-	if h, ok := instanceConfig.(initializer); ok {
-		pdk := pdk.Init(conn)
-		if err := h.Init(pdk); err != nil {
-			return fmt.Errorf("Initialization has failed: %w", err)
-		}
-	}
-
-// 	log.Printf("instance: %v", instance)
+	// 	log.Printf("instance: %v", instance)
 
 	rh.addInstance(&instance)
 
@@ -143,6 +142,12 @@ func (rh *rpcHandler) CloseInstance(id int, status *InstanceStatus) error {
 	rh.lock.RUnlock()
 	if !ok {
 		return fmt.Errorf("no plugin instance %d", id)
+	}
+
+	if h, ok := instance.config.(closer); ok {
+		if err := h.Close(); err != nil {
+			return fmt.Errorf("Initialization has failed: %w", err)
+		}
 	}
 
 	*status = InstanceStatus{
