@@ -1,7 +1,7 @@
 proto_def = server/kong_plugin_protocol/pluginsocket.pb.go
 
 .PHONY: lint
-lint:
+lint: $(proto_def)
 	golangci-lint run --exclude composites
 
 .PHONY: dep
