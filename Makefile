@@ -17,4 +17,5 @@ pluginsocket.proto:
 	wget https://raw.githubusercontent.com/Kong/kong/master/kong/include/kong/pluginsocket.proto
 
 $(proto_def): pluginsocket.proto
+	mkdir -p server/kong_plugin_protocol
 	protoc -I . pluginsocket.proto --go_out=./server/kong_plugin_protocol/ --go_opt=paths=source_relative
