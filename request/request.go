@@ -7,7 +7,7 @@ package request
 
 import (
 	"errors"
-	"io/ioutil"
+	"io/ioutil" //nolint:all // TODO: update to remove deprecated dependency
 
 	"github.com/Kong/go-pdk/bridge"
 	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
