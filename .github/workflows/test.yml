@@ -25,6 +25,38 @@ jobs:
           go-version: "${{ matrix.golang }}"
           cache: true
       - run: go version
+      
+      - name: install protobuf compiler
+        run: |
+          wget https://github.com/protocolbuffers/protobuf/releases/download/v21.7/protoc-21.7-linux-x86_64.zip
+          unzip protoc-21.7-linux-x86_64.zip
+          sudo cp bin/protoc /usr/bin/
+          sudo cp -Rf include/* /usr/include
+          wget https://github.com/protocolbuffers/protobuf-go/releases/download/v1.28.1/protoc-gen-go.v1.28.1.linux.amd64.tar.gz
+          tar -xf protoc-gen-go.v1.28.1.linux.amd64.tar.gz
+          sudo cp protoc-gen-go /usr/bin/
+          
+      - name: check if proto file is synced with kong
+        run: |
+          rm ./server/kong_plugin_protocol/pluginsocket.proto
+          make ./server/kong_plugin_protocol/pluginsocket.proto
+          # see if we got the same proto file
+          git diff --exit-code --name-only -- '*.proto'
+          if [ $? -ne 0 ]; then
+            echo "proto file is out of sync with kong master"
+            exit 1
+          fi
+
+      - name: check if pb.go is modified manually
+        run: |
+          rm ./server/kong_plugin_protocol/pluginsocket.pb.go
+          make ./server/kong_plugin_protocol/pluginsocket.pb.go
+          # see if we can reproduce the same pb.go file
+          git diff --exit-code --name-only -- '*.pb.go'
+          if [ $? -ne 0 ]; then
+            echo "pb.go is modified manually"
+            exit 1
+          fi
 
       - name: Dependency
         run: make dep
