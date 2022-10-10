@@ -9,27 +9,9 @@ on:
       - "*.md"
 
 jobs:
-  dependencies:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/setup-go@v3
-      with:
-        go-version: "${{ matrix.golang }}"
-        cache: true
-    - name: install protobuf compiler
-      run: |
-        go version
-        wget https://github.com/protocolbuffers/protobuf/releases/download/v21.7/protoc-21.7-linux-x86_64.zip
-        unzip protoc-21.7-linux-x86_64.zip
-        sudo cp bin/protoc /usr/bin/
-        sudo cp -Rf include/* /usr/include
-        wget https://github.com/protocolbuffers/protobuf-go/releases/download/v1.28.1/protoc-gen-go.v1.28.1.linux.amd64.tar.gz
-        tar -xf protoc-gen-go.v1.28.1.linux.amd64.tar.gz
-        sudo cp bin/protoc-gen-go /usr/bin/
   tests:
     name: Tests
     runs-on: ubuntu-20.04
-    needs: dependencies
 
     strategy:
       matrix:
@@ -38,6 +20,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "${{ matrix.golang }}"
+          cache: true
+      - run: go version
+      
+      - name: install protobuf compiler
+        run: |
+          go version
+          wget https://github.com/protocolbuffers/protobuf/releases/download/v21.7/protoc-21.7-linux-x86_64.zip
+          unzip protoc-21.7-linux-x86_64.zip
+          sudo cp bin/protoc /usr/bin/
+          sudo cp -Rf include/* /usr/include
+          wget https://github.com/protocolbuffers/protobuf-go/releases/download/v1.28.1/protoc-gen-go.v1.28.1.linux.amd64.tar.gz
+          tar -xf protoc-gen-go.v1.28.1.linux.amd64.tar.gz
+          sudo cp bin/protoc-gen-go /usr/bin/
+
       - name: Dependency
         run: make dep
 
