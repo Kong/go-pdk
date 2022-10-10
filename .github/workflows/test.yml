@@ -25,16 +25,6 @@ jobs:
           go-version: "${{ matrix.golang }}"
           cache: true
       - run: go version
-      
-      - name: install protobuf compiler
-        run: |
-          wget https://github.com/protocolbuffers/protobuf/releases/download/v21.7/protoc-21.7-linux-x86_64.zip
-          unzip protoc-21.7-linux-x86_64.zip
-          sudo cp bin/protoc /usr/bin/
-          sudo cp -Rf include/* /usr/include
-          wget https://github.com/protocolbuffers/protobuf-go/releases/download/v1.28.1/protoc-gen-go.v1.28.1.linux.amd64.tar.gz
-          tar -xf protoc-gen-go.v1.28.1.linux.amd64.tar.gz
-          sudo cp protoc-gen-go /usr/bin/
 
       - name: Dependency
         run: make dep
