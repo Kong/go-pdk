@@ -78,7 +78,7 @@ type Request struct {
 	Method  string
 	Url     string
 	Headers http.Header
-	Body    string
+	Body    []byte
 }
 
 func (req Request) clone() Request {
@@ -111,7 +111,7 @@ func (req *Request) Validate() error {
 	req.Headers = mergeHeaders(make(http.Header), req.Headers)
 
 	if req.Method == "GET" {
-		if req.Body != "" {
+		if len(req.Body) != 0 {
 			return fmt.Errorf("GET requests must not have body, found \"%v\"", req.Body)
 		}
 		return nil
@@ -148,7 +148,7 @@ type Response struct {
 	Status  int
 	Message string
 	Headers http.Header
-	Body    string
+	Body    []byte
 }
 
 func (res *Response) merge(other Response) {
@@ -165,7 +165,7 @@ func (res *Response) merge(other Response) {
 			res.Headers = other.Headers.Clone()
 		}
 	}
-	if other.Body != "" {
+	if len(other.Body) != 0 {
 		res.Body = other.Body
 	}
 }
@@ -376,7 +376,7 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		out = bridge.WrapString(e.ClientReq.Headers.Get(args.V))
 
 	case "kong.request.get_raw_body":
-		out = bridge.WrapString(e.ClientReq.Body)
+		out = bridge.WrapByteString(e.ClientReq.Body)
 
 	case "kong.request.get_headers":
 		out, err = bridge.WrapHeaders(e.ClientReq.Headers)
@@ -511,7 +511,7 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		mergeHeaders(e.ServiceReq.Headers, headers)
 
 	case "kong.service.request.set_raw_body":
-		args := kong_plugin_protocol.String{}
+		args := kong_plugin_protocol.ByteString{}
 		e.noErr(proto.Unmarshal(args_d, &args))
 		e.ServiceRes.Body = args.V
 
@@ -527,7 +527,7 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		out = bridge.WrapString(e.ServiceRes.Headers.Get(args.V))
 
 	case "kong.service.response.get_raw_body":
-		out = bridge.WrapString(e.ServiceRes.Body)
+		out = bridge.WrapByteString(e.ServiceRes.Body)
 
 	default:
 		e.t.Errorf("unknown method: \"%v\"", method)

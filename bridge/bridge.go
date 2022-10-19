@@ -65,6 +65,10 @@ func WrapString(s string) *kong_plugin_protocol.String {
 	return &kong_plugin_protocol.String{V: s}
 }
 
+func WrapByteString(s []byte) *kong_plugin_protocol.ByteString {
+	return &kong_plugin_protocol.ByteString{V: s}
+}
+
 func WrapHeaders(h map[string][]string) (*structpb.Struct, error) {
 	h2 := make(map[string]interface{}, len(h))
 	for k, v := range h {
