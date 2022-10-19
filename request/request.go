@@ -214,18 +214,30 @@ func (r Request) GetRawBody() ([]byte, error) {
 	}
 
 	switch x := out.Kind.(type) {
-		case *kong_plugin_protocol.RawBodyResult_Content:
-			return x.Content, nil
+	case *kong_plugin_protocol.RawBodyResult_Content:
+		return x.Content, nil
 
-		case *kong_plugin_protocol.RawBodyResult_BodyFilepath:
-			return ioutil.ReadFile(x.BodyFilepath)
+	case *kong_plugin_protocol.RawBodyResult_BodyFilepath:
+		return ioutil.ReadFile(x.BodyFilepath)
 
-		case *kong_plugin_protocol.RawBodyResult_Error:
-			return nil, errors.New(x.Error)
+	case *kong_plugin_protocol.RawBodyResult_Error:
+		return nil, errors.New(x.Error)
 
-		default:
-			return out.GetContent(), nil
+	default:
+		return out.GetContent(), nil
 	}
+}
+
+// kong.Request.GetUriCaptures() returns the catured URI fragements.
+//
+//
+func (r Request) GetUriCaptures() ([][]byte, map[string][]byte, error) {
+	out := new(kong_plugin_protocol.UriCapturesResult)
+	err := r.Ask("kong.request.get_uri_captures", nil, out)
+	if err != nil {
+		return nil, nil, err
+	}
+	return out.Unnamed, out.Named, nil
 }
 
 // TODO get_body
