@@ -1,8 +1,22 @@
 # Table of Contents
 
+- [v0.6.0](#v060)
 - [v0.5.0](#v050)
 - [v0.4.0](#v040)
 - [v0.3.1](#v031)
+
+## [v0.6.0]
+
+> Released 2022/10/26
+
+### Changes
+
+- Fixed parameter type of `kong.service.request.set_raw_body`, return type of
+  `kong.service.response.get_raw_body`,
+  and body parameter type of `kong.response.exit` to `[]byte`.
+  Note that old version (before 3.0.1, or commits before cd2bcf9) of kong is incompatible after this change.
+  [#132](https://github.com/Kong/go-pdk/pull/132)
+  [kong/kong#9526](https://github.com/Kong/kong/pull/9526)
 
 ## [v0.5.0]
 
@@ -52,6 +66,7 @@
 
 [Back to TOC](#table-of-contents)
 
+[v0.6.0]: https://github.com/Kong/kong/compare/v0.5.0..v0.6.0
 [v0.5.0]: https://github.com/Kong/kong/compare/v0.4.0..v0.5.0
 [v0.4.0]: https://github.com/Kong/kong/compare/v0.3.1..v0.4.0
 [v0.3.1]: https://github.com/Kong/kong/compare/v0.3.0..v0.3.1
