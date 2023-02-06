@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/stretchr/testify v1.7.2
-	github.com/ugorji/go/codec v1.2.7
+	github.com/ugorji/go/codec v1.2.9
 	google.golang.org/protobuf v1.28.0
 )
 
