@@ -127,25 +127,27 @@ func (c Client) GetConsumer() (consumer entities.Consumer, err error) {
 // for the current request. While both consumer and credential can be nil,
 // it is required that at least one of them exists. Otherwise this function will throw an error.
 func (c Client) Authenticate(consumer *entities.Consumer, credential *AuthenticatedCredential) error {
-	if consumer == nil {
-		return fmt.Errorf("Invalid consumer")
+	if consumer == nil && credential == nil {
+		return fmt.Errorf("either credential or consumer must be provided")
 	}
-	if credential == nil {
-		return fmt.Errorf("Invalid credential")
-	}
-	arg := &kong_plugin_protocol.AuthenticateArgs{
-		Consumer: &kong_plugin_protocol.Consumer{
+
+	arg := &kong_plugin_protocol.AuthenticateArgs{}
+	if consumer != nil {
+		arg.Consumer = &kong_plugin_protocol.Consumer{
 			Id:        consumer.Id,
 			CreatedAt: int64(consumer.CreatedAt),
 			Username:  consumer.Username,
 			CustomId:  consumer.CustomId,
 			Tags:      consumer.Tags,
-		},
-		Credential: &kong_plugin_protocol.AuthenticatedCredential{
+		}
+	}
+	if credential != nil {
+		arg.Credential = &kong_plugin_protocol.AuthenticatedCredential{
 			Id:         credential.Id,
 			ConsumerId: credential.ConsumerId,
-		},
+		}
 	}
+
 	err := c.Ask(`kong.client.authenticate`, arg, nil)
 	return err
 }

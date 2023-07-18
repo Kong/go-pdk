@@ -76,15 +76,48 @@ func TestLoadConsumer(t *testing.T) {
 	assert.Equal(t, entities.Consumer{Id: "001", Username: "Jon Doe"}, resp)
 }
 
+func TestAuthenticate(t *testing.T) {
+	var consumer *entities.Consumer = &entities.Consumer{Id: "001", Username: "Jon Doe"}
+	var credential *AuthenticatedCredential = &AuthenticatedCredential{Id: "000:00", ConsumerId: "001"}
+
+	c := mockClient(t, []bridgetest.MockStep{
+		{Method: "kong.client.authenticate",
+			Args: &kong_plugin_protocol.AuthenticateArgs{
+				Consumer: &kong_plugin_protocol.Consumer{
+					Id:        consumer.Id,
+					CreatedAt: int64(consumer.CreatedAt),
+					Username:  consumer.Username,
+					CustomId:  consumer.CustomId,
+					Tags:      consumer.Tags,
+				},
+				Credential: &kong_plugin_protocol.AuthenticatedCredential{
+					Id:         credential.Id,
+					ConsumerId: credential.ConsumerId,
+				},
+			},
+			Ret: nil,
+		},
+	})
+
+	err := c.Authenticate(consumer, credential)
+
+	assert.NoError(t, err)
+}
+
+func TestAuthenticateNil(t *testing.T) {
+	var consumer *entities.Consumer = nil
+	var credential *AuthenticatedCredential = nil
+
+	c := mockClient(t, nil)
+
+	err := c.Authenticate(consumer, credential)
+
+	assert.EqualError(t, err, "either credential or consumer must be provided")
+}
+
 /*
 func TestGetConsumer(t *testing.T) {
 	assert.Equal(t, bridge.StepData{Method: "kong.client.get_consumer"}, getBack(func() { client.GetConsumer() }))
-}
-
-func TestAuthenticate(t *testing.T) {
-	var consumer *entities.Consumer = nil
-	var credential *AuthenticatedCredential = nil
-	assert.Equal(t, bridge.StepData{Method: "kong.client.authenticate", Args: []interface{}{consumer, credential}}, getBack(func() { client.Authenticate(nil, nil) }))
 }
 
 func TestGetProtocol(t *testing.T) {
