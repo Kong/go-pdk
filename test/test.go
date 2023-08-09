@@ -116,6 +116,12 @@ func (req *Request) Validate() error {
 		}
 		return nil
 	}
+	if req.Method == "POST" || req.Method == "PUT" || req.Method == "PATCH" {
+		if len(req.Body) == 0 {
+			return fmt.Errorf("%s requests must have body, found \"%v\"", req.Method, req.Body)
+		}
+		return nil
+	}
 	return fmt.Errorf("Unsupported method \"%v\"", req.Method)
 }
 
@@ -222,18 +228,18 @@ func New(t *testing.T, req Request) (env *TestEnv, err error) {
 	return
 }
 
-func (e TestEnv) noErr(err error) {
+func (e *TestEnv) noErr(err error) {
 	if err != nil {
 		e.t.Error(err)
 	}
 }
 
 // Internal use.  Calls the Errof function with the test context.
-func (e TestEnv) Errorf(format string, args ...interface{}) {
+func (e *TestEnv) Errorf(format string, args ...interface{}) {
 	e.t.Errorf(format, args...)
 }
 
-func (e TestEnv) IsRunning() bool {
+func (e *TestEnv) IsRunning() bool {
 	return e.state == running
 }
 
@@ -443,6 +449,8 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 			headers := bridge.UnwrapHeaders(args.Headers)
 			mergeHeaders(e.ClientRes.Headers, headers)
 		}
+		e.state = finished
+		e.ClientRes.Body = args.Body
 
 	case "kong.router.get_route":
 		out = &kong_plugin_protocol.Route{
