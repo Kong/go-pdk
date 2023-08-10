@@ -76,15 +76,16 @@ func TestLoadConsumer(t *testing.T) {
 	assert.Equal(t, entities.Consumer{Id: "001", Username: "Jon Doe"}, resp)
 }
 
-/*
-func TestGetConsumer(t *testing.T) {
-	assert.Equal(t, bridge.StepData{Method: "kong.client.get_consumer"}, getBack(func() { client.GetConsumer() }))
-}
-
 func TestAuthenticate(t *testing.T) {
 	var consumer *entities.Consumer = nil
 	var credential *AuthenticatedCredential = nil
-	assert.Equal(t, bridge.StepData{Method: "kong.client.authenticate", Args: []interface{}{consumer, credential}}, getBack(func() { client.Authenticate(nil, nil) }))
+	c := Client{}
+	assert.Error(t, c.Authenticate(consumer, credential))
+}
+
+/*
+func TestGetConsumer(t *testing.T) {
+	assert.Equal(t, bridge.StepData{Method: "kong.client.get_consumer"}, getBack(func() { client.GetConsumer() }))
 }
 
 func TestGetProtocol(t *testing.T) {
