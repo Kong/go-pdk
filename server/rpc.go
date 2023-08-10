@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"log"
 	"reflect"
 	"strings"
@@ -70,6 +71,14 @@ func newRpcHandler(constructor func() interface{}, version string, priority int)
 
 type schemaDict map[string]interface{}
 
+func parseSchemaTag(kongschema string) (ret schemaDict, err error) {
+	if kongschema == "" {
+		return
+	}
+	err = json.Unmarshal([]byte(kongschema), &ret)
+	return
+}
+
 func getSchemaDict(t reflect.Type) schemaDict {
 	switch t.Kind() {
 	case reflect.String:
@@ -132,7 +141,19 @@ func getSchemaDict(t reflect.Type) schemaDict {
 			if name == "" {
 				name = strings.ToLower(field.Name)
 			}
-			fieldsArray = append(fieldsArray, schemaDict{name: typeDecl})
+			kongschema, err := parseSchemaTag(field.Tag.Get("kongschema"))
+			if err != nil {
+				log.Printf("Error parsing kongschema tag: %v", err)
+			}
+
+			var fieldDict schemaDict
+			if kongschema != nil {
+				fieldDict = kongschema
+				fieldDict["type"] = typeDecl["type"]
+			} else {
+				fieldDict = typeDecl
+			}
+			fieldsArray = append(fieldsArray, schemaDict{name: fieldDict})
 		}
 		return schemaDict{
 			"type":   "record",
