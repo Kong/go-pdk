@@ -6,12 +6,18 @@ import (
 	"github.com/Kong/go-pdk"
 	"log"
 	"time"
+	"math/rand"
 )
+
+type configMetadata struct {
+       Seq int `json:"__seq__"`
+}
 
 type instanceData struct {
 	id            int
 	startTime     time.Time
 	config        interface{}
+	configMeta    configMetadata
 	handlers      map[string]func(*pdk.PDK)
 	lastEventTime time.Time
 }
@@ -48,8 +54,19 @@ func (rh *rpcHandler) addInstance(instance *instanceData) {
 	rh.lock.Lock()
 	defer rh.lock.Unlock()
 
-	instance.id = rh.nextInstanceId
-	rh.nextInstanceId++
+	seq := instance.configMeta.Seq
+
+	var id int
+	if seq != 0 {
+		id = seq // if kong signaled a plugin seq number, use it
+	} else {
+		id = int(rand.Int31()) // otherwise assign a random id
+		for _, exists := rh.instances[id]; exists; { // handle possible collision
+			id = int(rand.Int31())
+		}
+	}
+	instance.id = id
+
 	rh.instances[instance.id] = instance
 }
 
@@ -69,8 +86,12 @@ type InstanceStatus struct {
 func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus) error {
 	// TODO: check if config.Name is the one we care
 
-	instanceConfig := rh.constructor()
+	instanceMeta := configMetadata{}
+	if err := json.Unmarshal(config.Config, &instanceMeta); err != nil {
+		return fmt.Errorf("decoding config metadata: %w", err)
+	}
 
+	instanceConfig := rh.constructor()
 	if err := json.Unmarshal(config.Config, instanceConfig); err != nil {
 		return fmt.Errorf("decoding config: %w", err)
 	}
@@ -78,6 +99,7 @@ func (rh *rpcHandler) StartInstance(config PluginConfig, status *InstanceStatus)
 	instance := instanceData{
 		startTime: time.Now(),
 		config:    instanceConfig,
+		configMeta: instanceMeta,
 		handlers:  getHandlers(instanceConfig),
 	}
 

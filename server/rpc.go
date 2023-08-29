@@ -15,7 +15,6 @@ type rpcHandler struct {
 	priority          int    // priority info
 	lock              sync.RWMutex
 	instances         map[int]*instanceData
-	nextInstanceId    int
 	events            map[int]*eventData
 	lastCloseInstance time.Time
 }

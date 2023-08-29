@@ -138,7 +138,6 @@ func handlePbCmd(rh *rpcHandler, conn net.Conn, m *kong_plugin_protocol.RpcCall)
 		if err != nil {
 			return
 		}
-
 		rm = &kong_plugin_protocol.RpcReturn{
 			Sequence: m.Sequence,
 			Return:   pbInstanceStatus(status),
