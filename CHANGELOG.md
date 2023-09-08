@@ -1,12 +1,23 @@
 # Table of Contents
 
-- [v0.9.0](#v050)
-- [v0.8.0](#v040)
-- [v0.7.1](#v031)
+- [v0.10.0](#v0100)
+- [v0.9.0](#v090)
+- [v0.8.0](#v080)
+- [v0.7.1](#v071)
 - [v0.6.0](#v060)
 - [v0.5.0](#v050)
 - [v0.4.0](#v040)
 - [v0.3.1](#v031)
+
+## [v0.10.0]
+
+> Released 2023/09/07
+
+### Fixes
+
+- Use plugin sequence ID passed by Kong as instance ID; if one is not found,
+pick a random value.
+  [#158](https://github.com/Kong/go-pdk/pull/158)
 
 ## [v0.9.0]
 
@@ -120,6 +131,7 @@ New ProtoBuf-based communications with Kong. Requires Kong 2.4.
 
 [Back to TOC](#table-of-contents)
 
+[v0.10.0]: https://github.com/Kong/kong/compare/v0.9.0..v0.10.0
 [v0.9.0]: https://github.com/Kong/kong/compare/v0.8.0..v0.9.0
 [v0.8.0]: https://github.com/Kong/kong/compare/v0.7.0..v0.8.0
 [v0.7.0]: https://github.com/Kong/kong/compare/v0.6.1..v0.7.0
