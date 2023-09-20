@@ -110,10 +110,14 @@ type mockEnvironment interface {
 	Handle(method string, args_d []byte) []byte
 	Errorf(format string, args ...interface{})
 	IsRunning() bool
+	SubscribeStatusChange(ch chan<- string)
 }
 
 func MockFunc(e mockEnvironment) net.Conn {
 	conA, conB := net.Pipe()
+
+	statusCh := make(chan string)
+	e.SubscribeStatusChange(statusCh)
 
 	go func() {
 		for {
@@ -138,8 +142,12 @@ func MockFunc(e mockEnvironment) net.Conn {
 				break
 			}
 
-			if !e.IsRunning() {
-				break
+			select {
+			case msg := <-statusCh:
+				if msg == "finnished" {
+					return
+				}
+			default: // do nothing
 			}
 		}
 	}()
