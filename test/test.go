@@ -178,13 +178,14 @@ const (
 )
 
 type TestEnv struct {
-	t          *testing.T
-	state      envState
-	pdk        *pdk.PDK
-	ClientReq  Request
-	ServiceReq Request
-	ServiceRes Response
-	ClientRes  Response
+	t           *testing.T
+	state       envState
+	stateChange chan<- string
+	pdk         *pdk.PDK
+	ClientReq   Request
+	ServiceReq  Request
+	ServiceRes  Response
+	ClientRes   Response
 }
 
 // New creates a new test environment.
@@ -234,6 +235,17 @@ func (e TestEnv) Errorf(format string, args ...interface{}) {
 
 func (e TestEnv) IsRunning() bool {
 	return e.state == running
+}
+
+func (e *TestEnv) Finish() {
+	e.state = finished
+	if e.stateChange != nil {
+		e.stateChange <- "finished"
+	}
+}
+
+func (e *TestEnv) SubscribeStatusChange(ch chan<- string) {
+	e.stateChange = ch
 }
 
 // Internal use.  Handles a PDK request from the plugin under test.
@@ -426,7 +438,7 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		e.noErr(proto.Unmarshal(args_d, &args))
 		e.ClientRes.Status = int(args.Status)
 		if args.Headers != nil {
-			e.state = finished
+			e.Finish()
 			e.ClientRes.Body = args.Body
 			headers := bridge.UnwrapHeaders(args.Headers)
 			mergeHeaders(e.ClientRes.Headers, headers)
