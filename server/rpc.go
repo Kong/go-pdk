@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ugorji/go/codec"
 )
 
 type rpcHandler struct {
@@ -69,6 +71,34 @@ func newRpcHandler(constructor func() interface{}, version string, priority int)
 
 type schemaDict map[string]interface{}
 
+func decodeSchema(s string) schemaDict {
+	var (
+		sd  schemaDict
+		h   codec.JsonHandle
+		ret strings.Builder
+	)
+
+	// allows for strings enclosed in single quotes
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\'' && i > 0 && s[i-1] != '\\' {
+			ret.WriteByte('"')
+		} else {
+			// allows for escaped single quotes as \'
+			ret.WriteByte(s[i])
+		}
+	}
+
+	enc := codec.NewDecoder(strings.NewReader(ret.String()), &h)
+	enc.MustDecode(&sd)
+	return sd
+}
+
+func updateSchemaDict(a, b schemaDict) {
+	for k, v := range b {
+		a[k] = v
+	}
+}
+
 func getSchemaDict(t reflect.Type) schemaDict {
 	switch t.Kind() {
 	case reflect.String:
@@ -131,6 +161,17 @@ func getSchemaDict(t reflect.Type) schemaDict {
 			if name == "" {
 				name = strings.ToLower(field.Name)
 			}
+
+			if s, ok := field.Tag.Lookup("schema"); ok {
+				if customSchema := decodeSchema(s); customSchema != nil {
+					if field.Type.Kind() == reflect.Map {
+						updateSchemaDict(typeDecl["keys"].(schemaDict), customSchema)
+					} else {
+						updateSchemaDict(typeDecl, customSchema)
+					}
+				}
+			}
+
 			fieldsArray = append(fieldsArray, schemaDict{name: typeDecl})
 		}
 		return schemaDict{
