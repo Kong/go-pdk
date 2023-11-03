@@ -438,11 +438,11 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		e.noErr(proto.Unmarshal(args_d, &args))
 		e.ClientRes.Status = int(args.Status)
 		if args.Headers != nil {
-			e.Finish()
-			e.ClientRes.Body = args.Body
 			headers := bridge.UnwrapHeaders(args.Headers)
 			mergeHeaders(e.ClientRes.Headers, headers)
 		}
+		e.Finish()
+		e.ClientRes.Body = args.Body
 
 	case "kong.router.get_route":
 		out = &kong_plugin_protocol.Route{
