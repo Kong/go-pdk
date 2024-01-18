@@ -116,7 +116,7 @@ type mockEnvironment interface {
 func MockFunc(e mockEnvironment) net.Conn {
 	conA, conB := net.Pipe()
 
-	statusCh := make(chan string)
+	statusCh := make(chan string, 1)
 	e.SubscribeStatusChange(statusCh)
 
 	go func() {
