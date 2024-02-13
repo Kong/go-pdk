@@ -170,6 +170,10 @@ func (res *Response) merge(other Response) {
 	}
 }
 
+type Ctx struct {
+	Store	map[string]interface{}
+}
+
 type envState int
 
 const (
@@ -185,6 +189,7 @@ type TestEnv struct {
 	ServiceReq Request
 	ServiceRes Response
 	ClientRes  Response
+	Ctx		   Ctx
 }
 
 // New creates a new test environment.
@@ -201,6 +206,7 @@ func New(t *testing.T, req Request) (env *TestEnv, err error) {
 		ServiceReq: req.clone(),
 		ServiceRes: Response{Headers: make(http.Header)},
 		ClientRes:  Response{Headers: make(http.Header)},
+		Ctx:		Ctx{Store: make(map[string]interface{})},
 	}
 
 	b := bridge.New(bridgetest.MockFunc(env)) // check
@@ -260,6 +266,17 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 
 	case "kong.client.get_protocol":
 		out = bridge.WrapString("https")
+
+	case "kong.ctx.shared.set":
+		args := kong_plugin_protocol.KV{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		e.Ctx.Store[args.K] = args.V
+
+	case "kong.ctx.shared.get":
+		args := kong_plugin_protocol.String{}
+		e.noErr(proto.Unmarshal(args_d, &args))
+		v := fmt.Sprintf("%v", e.Ctx.Store[args.V])
+		out = bridge.WrapString(v)
 
 	case "kong.ip.is_trusted":
 		out = &kong_plugin_protocol.Bool{V: true}
