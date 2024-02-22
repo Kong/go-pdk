@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         include:
-        - golang: '^1.18'
+        - golang: [ '>=1.18' ]
 
     steps:
       - uses: actions/checkout@v4
