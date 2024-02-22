@@ -62,7 +62,7 @@ jobs:
         run: make dep
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
         with:
          args: --exclude composites
 
