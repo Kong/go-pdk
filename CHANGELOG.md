@@ -1,4 +1,6 @@
-# Table of Contents
+# :warning: This file is no longer maintained - use GH releases instead
+
+## Table of Contents
 
 - [v0.10.0](#v0100)
 - [v0.9.0](#v090)
