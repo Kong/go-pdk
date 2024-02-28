@@ -54,8 +54,10 @@ func TestSharedContext(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test set
-	value, _ := structpb.NewValue("test-token")
-	setArgs, _ := proto.Marshal(&kong_plugin_protocol.KV{K: "Token", V: value})
+	value, err := structpb.NewValue("test-token")
+	assert.NoError(t, err)
+	setArgs, err := proto.Marshal(&kong_plugin_protocol.KV{K: "Token", V: value})
+	assert.NoError(t, err)
 
 	env.Handle("kong.ctx.shared.set", setArgs)
 	// Assert kv pair is in Ctx.Store
@@ -67,6 +69,7 @@ func TestSharedContext(t *testing.T) {
 	response := env.Handle("kong.ctx.shared.get", getArgs)
 
 	out := new(structpb.Value)
-	proto.Unmarshal(response, out)
+	err = proto.Unmarshal(response, out)
+	assert.NoError(t, err)
 	assert.Equal(t, "test-token", out.AsInterface())
 }
