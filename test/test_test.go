@@ -44,6 +44,8 @@ func TestNoHangingChannel(t *testing.T) {
 }
 
 func TestSharedContext(t *testing.T) {
+	key := "TestKey"
+
 	t.Parallel()
 
 	env, err := New(t, Request{
@@ -53,23 +55,38 @@ func TestSharedContext(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// Test set
-	value, err := structpb.NewValue("test-token")
-	assert.NoError(t, err)
-	setArgs, err := proto.Marshal(&kong_plugin_protocol.KV{K: "Token", V: value})
-	assert.NoError(t, err)
+	perform := func(v interface{}) {
+		// Test set
+		value, err := structpb.NewValue(v)
+		assert.NoError(t, err)
+		setArgs, err := proto.Marshal(&kong_plugin_protocol.KV{K: key, V: value})
+		assert.NoError(t, err)
 
-	env.Handle("kong.ctx.shared.set", setArgs)
-	// Assert kv pair is in Ctx.Store
-	assert.Equal(t, "test-token", env.Ctx.Store["Token"])
+		env.Handle("kong.ctx.shared.set", setArgs)
+		// Assert kv pair is in Ctx.Store
+		assert.Equal(t, v, env.Ctx.Store[key])
 
-	// Test get
-	key := bridge.WrapString("Token")
-	getArgs, _ := proto.Marshal(key)
-	response := env.Handle("kong.ctx.shared.get", getArgs)
+		// Test get
+		keyWrapped := bridge.WrapString(key)
+		getArgs, _ := proto.Marshal(keyWrapped)
+		response := env.Handle("kong.ctx.shared.get", getArgs)
 
-	out := new(structpb.Value)
-	err = proto.Unmarshal(response, out)
-	assert.NoError(t, err)
-	assert.Equal(t, "test-token", out.AsInterface())
+		out := new(structpb.Value)
+		err = proto.Unmarshal(response, out)
+		assert.NoError(t, err)
+		assert.Equal(t, v, out.AsInterface())
+	}
+
+	testValues := []interface{}{
+		"TestValue",
+		3.14,
+		false,
+		map[string]interface{}{
+			"key1": "value1",
+		},
+	}
+
+	for _, v := range testValues {
+		perform(v)
+	}
 }
