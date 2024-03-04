@@ -3,7 +3,7 @@ module github.com/Kong/go-pdk
 go 1.18
 
 require (
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/ugorji/go/codec v1.2.12
 	google.golang.org/protobuf v1.33.0
 )
