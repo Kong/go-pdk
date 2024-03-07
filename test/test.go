@@ -288,13 +288,14 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 	case "kong.ctx.shared.set":
 		args := kong_plugin_protocol.KV{}
 		e.noErr(proto.Unmarshal(args_d, &args))
-		e.Ctx.Store[args.K] = args.V
+		e.Ctx.Store[args.K] = args.V.AsInterface()
 
 	case "kong.ctx.shared.get":
 		args := kong_plugin_protocol.String{}
 		e.noErr(proto.Unmarshal(args_d, &args))
-		v := fmt.Sprintf("%v", e.Ctx.Store[args.V])
-		out = bridge.WrapString(v)
+		if e.Ctx.Store[args.V] != nil {
+			out, err = structpb.NewValue(e.Ctx.Store[args.V])
+		}
 
 	case "kong.ip.is_trusted":
 		out = &kong_plugin_protocol.Bool{V: true}
