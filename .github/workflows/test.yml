@@ -68,3 +68,13 @@ jobs:
 
       - name: Test
         run: make test
+
+      - name: Build example plugins
+        run: |
+          cd examples
+          rm go.sum
+          go mod tidy
+          go build go-hello.go
+          test -f go-hello
+          go build go-log.go
+          test -f go-log
