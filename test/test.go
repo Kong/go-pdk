@@ -398,7 +398,10 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		e.noErr(proto.Unmarshal(args_d, &args))
 		u, err := url.Parse(e.ClientReq.Url)
 		e.noErr(err)
-		out = bridge.WrapString(u.Query()[args.V][0])
+		arg := u.Query()[args.V]
+		if len(arg) > 0 {
+			out = bridge.WrapString(arg[0])
+		}
 
 	case "kong.request.get_query":
 		u, err := url.Parse(e.ClientReq.Url)
