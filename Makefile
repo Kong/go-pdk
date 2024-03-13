@@ -10,6 +10,7 @@ dep: $(proto_def_compiled)
 	go mod tidy
 
 test: dep
+	go clean -testcache
 	go test -v -race ./...
 
 sync_with_kong: clean $(proto_def_compiled)
