@@ -68,6 +68,11 @@ func (r Response) GetHeader(name string) (string, error) {
 
 // kong.ServiceResponse.GetRawBody() returns the raw body
 // of the response from the Service.
-func (r Response) GetRawBody() (string, error) {
-  return r.AskString(`kong.service.response.get_raw_body`, nil)
+func (r Response) GetRawBody() ([]byte, error) {
+	out := new(kong_plugin_protocol.RawBodyResult)
+	err := r.Ask(`kong.service.response.get_raw_body`, nil, out)
+	if err != nil {
+		return nil, err
+	}
+	return out.GetContent(), nil
 }
