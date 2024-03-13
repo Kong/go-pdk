@@ -44,7 +44,37 @@ this is the content`
 		"X-Two-Things": []string{"first", "second"},
 	}, res_h)
 
-	res_s, err = response.GetRawBody()
+	res_b, err := response.GetRawBody()
 	assert.NoError(t, err)
-	assert.Equal(t, body, res_s)
+	assert.Equal(t, body, string(res_b))
+
+	bodyRaw := []byte("a raw body")
+
+	responseRawBody := Response{bridge.New(bridgetest.Mock(t, []bridgetest.MockStep{
+		{"kong.service.response.get_status", nil, &kong_plugin_protocol.Int{V: 404}},
+		{"kong.service.response.get_header", bridge.WrapString("Host"), bridge.WrapString("example.com")},
+		{"kong.service.response.get_headers", &kong_plugin_protocol.Int{V: 30}, h},
+		{"kong.service.response.get_raw_body", nil, bridge.WrapByteString(bodyRaw)},
+	}))}
+
+	res_n, err = responseRawBody.GetStatus()
+	assert.NoError(t, err)
+	assert.Equal(t, 404, res_n)
+
+	res_s, err = responseRawBody.GetHeader("Host")
+	assert.NoError(t, err)
+	assert.Equal(t, "example.com", res_s)
+
+	res_h, err = responseRawBody.GetHeaders(30)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string][]string{
+		"Host":   []string{"example.com"},
+		"X-Two-Things": []string{"first", "second"},
+	}, res_h)
+
+	res_b, err = responseRawBody.GetRawBody()
+	assert.NoError(t, err)
+	assert.Equal(t, []byte("a raw body"), res_b)
+
+
 }
