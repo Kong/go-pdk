@@ -14,20 +14,40 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-type foo struct {
+type Config struct {
 	shouldExit bool
 }
 
-func MockNew() *foo {
-	return &foo{
-		// manually change me to see both ways
-		shouldExit: true,
-	}
-}
-
-func (f *foo) Response(kong *pdk.PDK) {
-	if f.shouldExit {
+// Plugin used for tests
+func (conf *Config) Access(kong *pdk.PDK) {
+	if conf.shouldExit {
 		kong.Response.Exit(http.StatusInternalServerError, []byte(errors.New("exit").Error()), nil)
+	}
+
+	path, err := kong.Request.GetPath()
+	if err != nil {
+		kong.Response.Exit(http.StatusInternalServerError, []byte(err.Error()), nil)
+		return
+	}
+
+	switch path {
+	case "/method":
+		method, err := kong.Request.GetMethod()
+		if err != nil {
+			kong.Response.Exit(http.StatusInternalServerError, []byte(err.Error()), nil)
+			return
+		}
+
+		switch method {
+		case "GET":
+			kong.Response.Exit(http.StatusOK, []byte("get"), nil)
+		case "POST":
+			kong.Response.Exit(http.StatusOK, []byte("post"), nil)
+		default:
+			kong.Response.Exit(http.StatusNotImplemented, nil, nil)
+		}
+	default:
+		kong.Response.Exit(http.StatusNotImplemented, nil, nil)
 	}
 }
 
@@ -40,7 +60,7 @@ func TestNoHangingChannel(t *testing.T) {
 		Body:   []byte("{}"),
 	})
 	assert.NoError(t, err)
-	env.DoHttps(MockNew())
+	env.DoHttps(&Config{ shouldExit: true })
 }
 
 func TestSharedContext(t *testing.T) {
@@ -89,4 +109,43 @@ func TestSharedContext(t *testing.T) {
 	for _, v := range testValues {
 		perform(v)
 	}
+}
+
+func TestAllowGET(t *testing.T) {
+	env, err := New(t, Request{
+		Method: "GET",
+		Url:    "http://localhost/method",
+	})
+	assert.NoError(t, err)
+
+	env.DoHttps(&Config{})
+	assert.Equal(t, 200, env.ClientRes.Status)
+	assert.Equal(t, []byte("get"), env.ClientRes.Body)
+}
+
+func TestAllowPOST(t *testing.T) {
+	env, err := New(t, Request{
+		Method: "POST",
+		Url:    "http://localhost/method",
+		Body:   []byte("post body"),
+	})
+	assert.NoError(t, err)
+
+	env.DoHttps(&Config{})
+	assert.Equal(t, 200, env.ClientRes.Status)
+	assert.Equal(t, []byte("post"), env.ClientRes.Body)
+}
+
+func TestExitStatus(t *testing.T) {
+	t.Parallel()
+	env, err := New(t, Request{
+		Method: "POST",
+		Url:    "http://localhost/notimplimented",
+		Body:   []byte("Should not copy"),
+	})
+	assert.NoError(t, err)
+
+	env.DoHttps(&Config{})
+	assert.Equal(t, http.StatusNotImplemented, env.ClientRes.Status)
+	assert.Equal(t, []byte(nil), env.ClientRes.Body)
 }
