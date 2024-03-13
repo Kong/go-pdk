@@ -15,8 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        include:
-        - golang: '^1.18'
+        golang: ["oldstable", "stable"]
 
     steps:
       - uses: actions/checkout@v4
