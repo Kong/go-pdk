@@ -256,6 +256,15 @@ func (e *TestEnv) Finish() {
 	}
 }
 
+func LowercaseHeaders(h http.Header) http.Header {
+	lowercaseHeaders := make(http.Header, len(h))
+	for header, value := range h {
+		lowercaseHeaders[strings.ToLower(header)] = value
+	}
+
+	return lowercaseHeaders
+}
+
 func (e *TestEnv) SubscribeStatusChange(ch chan<- string) {
 	e.stateChange = ch
 }
@@ -418,7 +427,7 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		out = bridge.WrapByteString(e.ClientReq.Body)
 
 	case "kong.request.get_headers":
-		out, err = bridge.WrapHeaders(e.ClientReq.Headers)
+		out, err = bridge.WrapHeaders(LowercaseHeaders(e.ClientReq.Headers))
 
 	case "kong.response.get_status":
 		out = &kong_plugin_protocol.Int{V: int32(e.ClientRes.Status)}
@@ -429,7 +438,7 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		out = bridge.WrapString(e.ClientRes.Headers.Get(args.V))
 
 	case "kong.response.get_headers":
-		out, err = bridge.WrapHeaders(e.ClientRes.Headers)
+		out, err = bridge.WrapHeaders(LowercaseHeaders(e.ClientRes.Headers))
 
 	case "kong.response.get_source":
 		out = bridge.WrapString("service")
@@ -560,7 +569,7 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 		out = &kong_plugin_protocol.Int{V: int32(e.ServiceRes.Status)}
 
 	case "kong.service.response.get_headers":
-		out, err = bridge.WrapHeaders(e.ServiceRes.Headers)
+		out, err = bridge.WrapHeaders(LowercaseHeaders(e.ServiceRes.Headers))
 
 	case "kong.service.response.get_header":
 		args := kong_plugin_protocol.String{}
