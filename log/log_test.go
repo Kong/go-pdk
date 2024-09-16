@@ -57,5 +57,4 @@ func TestSetSerializeValue(t *testing.T) {
 	assert.NoError(t, log.SetSerializeValue("key", "value"))
 	assert.NoError(t, log.SetSerializeValue("key", 1))
 	assert.NoError(t, log.SetSerializeValue("key", true))
-	// assert.NoError(t, log.SetSerializeValue("keyStruct", ))
 }
