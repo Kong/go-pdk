@@ -71,12 +71,12 @@ func (r Log) SetSerializeValue(key string, v interface{}) error {
 }
 
 // func (r Log) SetSerializeValueAdd(key string, v interface{}) error {
-// 	err := r.Ask(`kong.log.set_serialize_value`, key, v, modeAdd)
+// 	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeAdd)
 // 	return err
 // }
 
 // func (r Log) SetSerializeValueReplace(key string, v interface{}) error {
-// 	err := r.Ask(`kong.log.set_serialize_value`, key, v, modeReplace)
+// 	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeReplace)
 // 	return err
 // }
 
