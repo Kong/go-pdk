@@ -51,9 +51,11 @@ func TestSetSerializeValue(t *testing.T) {
 	log := mockLog(t, []bridgetest.MockStep{
 		{"kong.log.set_serialize_value", &kong_plugin_protocol.KV{K: "key", V: structpb.NewStringValue("value")}, nil},
 		{"kong.log.set_serialize_value", &kong_plugin_protocol.KV{K: "key", V: structpb.NewNumberValue(1)}, nil},
+		{"kong.log.set_serialize_value", &kong_plugin_protocol.KV{K: "key", V: structpb.NewBoolValue(true)}, nil},
 	})
 
 	assert.NoError(t, log.SetSerializeValue("key", "value"))
 	assert.NoError(t, log.SetSerializeValue("key", 1))
+	assert.NoError(t, log.SetSerializeValue("key", true))
 	// assert.NoError(t, log.SetSerializeValue("keyStruct", ))
 }
