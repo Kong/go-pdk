@@ -45,15 +45,16 @@ package test
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/bridge"
-	"github.com/Kong/go-pdk/bridge/bridgetest"
 	"github.com/Kong/go-pdk/client"
 	"github.com/Kong/go-pdk/ctx"
 	"github.com/Kong/go-pdk/ip"
@@ -90,7 +91,7 @@ func (req Request) clone() Request {
 	}
 }
 
-func mergeHeaders(h http.Header, in http.Header) http.Header {
+func mergeHeaders(h, in http.Header) http.Header {
 	for k, l := range in {
 		h.Del(k)
 		for _, v := range l {
@@ -177,7 +178,7 @@ func (res *Response) merge(other Response) {
 }
 
 type Ctx struct {
-	Store	map[string]interface{}
+	Store map[string]interface{}
 }
 
 type envState int
@@ -192,18 +193,20 @@ type TestEnv struct {
 	state       envState
 	stateChange chan<- string
 	pdk         *pdk.PDK
+	conn        net.Conn
 	ClientReq   Request
 	ServiceReq  Request
 	ServiceRes  Response
 	ClientRes   Response
-	Ctx		 	Ctx
+	Ctx         Ctx
+	mu          sync.RWMutex
 }
 
 // New creates a new test environment.
 func New(t *testing.T, req Request) (env *TestEnv, err error) {
 	err = req.Validate()
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	env = &TestEnv{
@@ -213,10 +216,12 @@ func New(t *testing.T, req Request) (env *TestEnv, err error) {
 		ServiceReq: req.clone(),
 		ServiceRes: Response{Headers: make(http.Header)},
 		ClientRes:  Response{Headers: make(http.Header)},
-		Ctx:		Ctx{Store: make(map[string]interface{})},
+		Ctx:        Ctx{Store: make(map[string]interface{})},
 	}
 
-	b := bridge.New(bridgetest.MockFunc(env)) // check
+	env.conn = MockFunc(env)
+	b := bridge.New(env.conn)
+
 	env.pdk = &pdk.PDK{
 		Client:          client.Client{PdkBridge: b},
 		Ctx:             ctx.Ctx{PdkBridge: b},
@@ -231,7 +236,7 @@ func New(t *testing.T, req Request) (env *TestEnv, err error) {
 		ServiceRequest:  service_request.Request{PdkBridge: b},
 		ServiceResponse: service_response.Response{PdkBridge: b},
 	}
-	return
+	return env, nil
 }
 
 func (e *TestEnv) noErr(err error) {
@@ -246,6 +251,9 @@ func (e *TestEnv) Errorf(format string, args ...interface{}) {
 }
 
 func (e *TestEnv) IsRunning() bool {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
 	return e.state == running
 }
 
@@ -253,6 +261,10 @@ func (e *TestEnv) Finish() {
 	e.state = finished
 	if e.stateChange != nil {
 		e.stateChange <- "finished"
+	}
+
+	if e.conn != nil {
+		e.conn.Close()
 	}
 }
 
@@ -271,6 +283,9 @@ func (e *TestEnv) SubscribeStatusChange(ch chan<- string) {
 
 // Internal use.  Handles a PDK request from the plugin under test.
 func (e *TestEnv) Handle(method string, args_d []byte) []byte {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	var out proto.Message
 	var err error
 
