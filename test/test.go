@@ -662,6 +662,21 @@ func (e *TestEnv) DoResponse(config interface{}) {
 	}
 }
 
+func (e *TestEnv) DoResponsePluginChain(config interface{}, index int) {
+	if !e.IsRunning() {
+		return
+	}
+
+	if index == 0 {
+		e.ClientRes.merge(e.ServiceRes)
+	}
+
+	if h, ok := config.(interface{ Response(*pdk.PDK) }); ok {
+		e.t.Log("Response")
+		h.Response(e.pdk)
+	}
+}
+
 // DoPreread tests the Preread method of a streaming plugin.
 func (e *TestEnv) DoPreread(config interface{}) {
 	if !e.IsRunning() {
