@@ -97,6 +97,33 @@ pluginserver_my_plugin_query_cmd = /usr/local/bin/my-plugin -dump
 
 The socket and start command lines can be omitted if using defaults.
 
+
+## Using in Containers or Kubernetes
+
+To run Go plugins with Kong Gateway in a container, copy your plugin binary into the Kong image and ensure it is executable by the container.
+
+> **Note:** Kong's official Docker images run as the `nobody` user. Use `USER root` temporarily to install or copy files.
+
+Example `Dockerfile`:
+
+```dockerfile
+FROM kong
+USER root
+
+# Copy your compiled Go plugin into the container
+COPY your-go-plugin /usr/local/bin/your-go-plugin
+RUN chmod +x /usr/local/bin/your-go-plugin
+
+USER kong
+ENTRYPOINT ["/docker-entrypoint.sh"]
+EXPOSE 8000 8443 8001 8444
+STOPSIGNAL SIGQUIT
+HEALTHCHECK --interval=10s --timeout=10s --retries=10 CMD kong health
+CMD ["kong", "docker-start"]
+```
+
+Ensure the plugin path matches the value set in `kong.conf` under `pluginserver_your_plugin_start_cmd`.
+
 ## Example Plugins
 
 Explore [example plugins](https://github.com/Kong/go-pdk/tree/master/examples).
