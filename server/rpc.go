@@ -146,10 +146,6 @@ func getSchemaDict(t reflect.Type) schemaDict {
 	return nil
 }
 
-func GetSchemaDict(t reflect.Type) schemaDict {
-	return getSchemaDict(t)
-}
-
 func withKongTagFields(current schemaDict, field reflect.StructField) schemaDict {
 	var validFields = []string{"required", "default"}
 	var boolFields = []string{"required"}
