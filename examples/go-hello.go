@@ -21,7 +21,7 @@ var Version = "0.2"
 var Priority = 1
 
 type Config struct {
-	Message string
+	Message string `json:"message" kong:"default=hello,required=true"`
 }
 
 func New() interface{} {
