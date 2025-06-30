@@ -11,7 +11,7 @@ on:
 jobs:
   tests:
     name: Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
@@ -24,7 +24,7 @@ jobs:
           go-version: "${{ matrix.golang }}"
           cache: true
       - run: go version
-      
+
       - name: install protobuf compiler
         run: |
           wget https://github.com/protocolbuffers/protobuf/releases/download/v21.7/protoc-21.7-linux-x86_64.zip
@@ -34,7 +34,7 @@ jobs:
           wget https://github.com/protocolbuffers/protobuf-go/releases/download/v1.28.1/protoc-gen-go.v1.28.1.linux.amd64.tar.gz
           tar -xf protoc-gen-go.v1.28.1.linux.amd64.tar.gz
           sudo cp protoc-gen-go /usr/bin/
-          
+
       - name: check if proto file is synced with kong
         run: |
           rm ./server/kong_plugin_protocol/pluginsocket.proto
