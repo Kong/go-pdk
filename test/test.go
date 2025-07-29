@@ -563,7 +563,7 @@ func (e *TestEnv) Handle(method string, args_d []byte) []byte {
 	case "kong.service.request.set_raw_body":
 		args := kong_plugin_protocol.ByteString{}
 		e.noErr(proto.Unmarshal(args_d, &args))
-		e.ServiceRes.Body = args.V
+		e.ServiceReq.Body = args.V
 
 	case "kong.service.response.get_status":
 		out = &kong_plugin_protocol.Int{V: int32(e.ServiceRes.Status)}
