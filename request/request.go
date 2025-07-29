@@ -101,10 +101,16 @@ func (r Request) GetMethod() (m string, err error) {
 	return r.AskString(`kong.request.get_method`, nil)
 }
 
-// kong.Request.GetPath() returns the path component of the request’s URL.
-// It is not normalized in any way and does not include the querystring.
+// kong.Request.GetPath() returns the normalized path component of the request’s URL.
+// It does not include the querystring.
 func (r Request) GetPath() (string, error) {
 	return r.AskString(`kong.request.get_path`, nil)
+}
+
+// kong.Request.GetRawPath() returns the raw, non-normalized version of the request path.
+// It is not normalized in any way and does not include the querystring.
+func (r Request) GetRawPath() (string, error) {
+	return r.AskString(`kong.request.get_raw_path`, nil)
 }
 
 // kong.Request.GetPathWithQuery() returns the path, including
@@ -229,8 +235,6 @@ func (r Request) GetRawBody() ([]byte, error) {
 }
 
 // kong.Request.GetUriCaptures() returns the catured URI fragements.
-//
-//
 func (r Request) GetUriCaptures() ([][]byte, map[string][]byte, error) {
 	out := new(kong_plugin_protocol.UriCapturesResult)
 	err := r.Ask("kong.request.get_uri_captures", nil, out)

@@ -44,6 +44,7 @@ this is the content`
 		{"kong.request.get_method", nil, bridge.WrapString("HEADER")},
 		{"kong.request.get_path", nil, bridge.WrapString("/login/orout")},
 		{"kong.request.get_path_with_query", nil, bridge.WrapString("/login/orout?ref=wayback")},
+		{"kong.request.get_raw_path", nil, bridge.WrapString("/login/:loginParam")},
 		{"kong.request.get_raw_query", nil, bridge.WrapString("ref=wayback&trail=faint")},
 		{"kong.request.get_query_arg", bridge.WrapString("ref"), bridge.WrapString("wayback")},
 		{"kong.request.get_query", &kong_plugin_protocol.Int{V: 30}, q},
@@ -91,6 +92,10 @@ this is the content`
 	ret, err = request.GetPathWithQuery()
 	assert.NoError(t, err)
 	assert.Equal(t, "/login/orout?ref=wayback", ret)
+
+	ret, err = request.GetRawPath()
+	assert.NoError(t, err)
+	assert.Equal(t, "/login/:loginParam", ret)
 
 	ret, err = request.GetRawQuery()
 	assert.NoError(t, err)
