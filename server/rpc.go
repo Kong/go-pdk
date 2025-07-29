@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"slices"
 )
 
 type rpcHandler struct {
@@ -131,7 +133,9 @@ func getSchemaDict(t reflect.Type) schemaDict {
 			if name == "" {
 				name = strings.ToLower(field.Name)
 			}
-			fieldsArray = append(fieldsArray, schemaDict{name: typeDecl})
+			// Apply Kong tags to the field's type declaration
+			typeDeclWithKong := withKongTagFields(typeDecl, field)
+			fieldsArray = append(fieldsArray, schemaDict{name: typeDeclWithKong})
 		}
 		return schemaDict{
 			"type":   "record",
@@ -140,6 +144,33 @@ func getSchemaDict(t reflect.Type) schemaDict {
 	}
 
 	return nil
+}
+
+func withKongTagFields(current schemaDict, field reflect.StructField) schemaDict {
+	var validFields = []string{"required", "default"}
+	var boolFields = []string{"required"}
+	result := current
+	tag := field.Tag.Get("kong")
+	if tag == "" {
+		return result
+	}
+
+	tagMap := strings.Split(tag, ",")
+	for _, tag := range tagMap {
+		parts := strings.Split(tag, "=")
+		if len(parts) != 2 {
+			continue
+		}
+		if slices.Contains(validFields, parts[0]) {
+			result[parts[0]] = parts[1]
+		}
+
+		if slices.Contains(boolFields, parts[0]) {
+			result[parts[0]] = parts[1] == "true"
+		}
+	}
+
+	return result
 }
 
 type pluginInfo struct {
@@ -158,18 +189,27 @@ func (rh *rpcHandler) getInfo() (info pluginInfo, err error) {
 		return
 	}
 
+	schema, err := rh.getSchema(name)
+	if err != nil {
+		return
+	}
+
 	info = pluginInfo{
-		Name:   name,
-		Phases: getHandlerNames(rh.configType),
-		Schema: schemaDict{
-			"name": name,
-			"fields": []schemaDict{
-				{"config": getSchemaDict(rh.configType)},
-			},
-		},
+		Name:     name,
+		Phases:   getHandlerNames(rh.configType),
+		Schema:   schema,
 		Version:  rh.version,
 		Priority: rh.priority,
 	}
 
 	return
+}
+
+func (rh *rpcHandler) getSchema(name string) (schema schemaDict, err error) {
+	return schemaDict{
+		"name": name,
+		"fields": []schemaDict{
+			{"config": getSchemaDict(rh.configType)},
+		},
+	}, nil
 }
