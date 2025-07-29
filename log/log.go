@@ -5,6 +5,7 @@ package log
 
 import (
 	"github.com/Kong/go-pdk/bridge"
+	"github.com/Kong/go-pdk/server/kong_plugin_protocol"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -51,21 +52,29 @@ func (r Log) Debug(args ...interface{}) error {
 }
 
 // var (
-// 	modeSet = map[string]string{ "mode": "set" }
-// 	modeAdd = map[string]string{ "mode": "add" }
-// 	modeReplace = map[string]string{ "mode": "replace" }
+// 	modeSet = map[string]string{"mode": "set"}
+// 	modeAdd     = map[string]string{"mode": "add"}
+// 	modeReplace = map[string]string{"mode": "replace"}
 // )
-//
-// func (r Log) SetSerializeValue(key string, v interface{}) error {
-// 	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeSet)
-// 	return err
-// }
-//
+
+func (r Log) SetSerializeValue(key string, v interface{}) error {
+	value, err := structpb.NewValue(v)
+	if err != nil {
+		return err
+	}
+	arg := kong_plugin_protocol.KV{
+		K: key,
+		V: value,
+	}
+	err = r.Ask(`kong.log.set_serialize_value`, &arg, nil)
+	return err
+}
+
 // func (r Log) SetSerializeValueAdd(key string, v interface{}) error {
 // 	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeAdd)
 // 	return err
 // }
-//
+
 // func (r Log) SetSerializeValueReplace(key string, v interface{}) error {
 // 	_, err := r.Ask(`kong.log.set_serialize_value`, key, v, modeReplace)
 // 	return err
