@@ -119,18 +119,17 @@ func MockFunc(e mockEnvironment) net.Conn {
 	statusCh := make(chan string, 1)
 	e.SubscribeStatusChange(statusCh)
 
+	var err error
 	go func() {
 		for {
 			d, err := readPbFrame(conB)
 			if err != nil {
-				e.Errorf("Can't read method name")
 				break
 			}
 			method := string(d)
 
 			d, err = readPbFrame(conB)
 			if err != nil {
-				e.Errorf("Can't read method \"%v\" arguments", method)
 				break
 			}
 
@@ -138,18 +137,21 @@ func MockFunc(e mockEnvironment) net.Conn {
 
 			err = writePbFrame(conB, d)
 			if err != nil {
-				e.Errorf("Can't write back return values")
 				break
 			}
+		}
 
-			select {
-			case msg := <-statusCh:
-				if msg == "finished" {
-					return
-				}
-			default: // do nothing
+		select {
+		case msg := <-statusCh:
+			if msg == "finished" {
+				return
+			}
+		default:
+			if err != nil {
+				e.Errorf(err.Error())
 			}
 		}
+		conB.Close()
 	}()
 	return conA
 }
